@@ -6,26 +6,33 @@
     <title>GeoJSON Editor</title>
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: #f3f3f3;
+            background: #ffffff;
+            color: #212121;
         }
         
+        /* Barra de título estilo Excel */
         .title-bar {
-            background: #0078d7;
+            background: #217346; /* Verde Excel */
             color: white;
             padding: 5px 10px;
             display: flex;
             justify-content: space-between;
             font-size: 12px;
+            height: 24px;
+            align-items: center;
         }
         
+        /* Barra de menú estilo Excel */
         .menu-bar {
-            background: #f3f3f3;
+            background: #f3f2f1;
             display: flex;
             padding: 0;
             border-bottom: 1px solid #d4d4d4;
+            height: 36px;
+            align-items: center;
         }
         
         .menu-item {
@@ -33,10 +40,13 @@
             cursor: pointer;
             position: relative;
             font-size: 13px;
+            height: 100%;
+            display: flex;
+            align-items: center;
         }
         
         .menu-item:hover {
-            background: #e5e5e5;
+            background: #e6e6e6;
         }
         
         .menu-dropdown {
@@ -46,7 +56,7 @@
             left: 0;
             background: white;
             border: 1px solid #d4d4d4;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             z-index: 100;
             min-width: 180px;
         }
@@ -66,43 +76,72 @@
             background: #e5f3ff;
         }
         
+        /* Contenedor principal de la hoja */
         .sheet-container {
             display: flex;
-            height: calc(100vh - 60px);
+            height: calc(100vh - 70px);
             overflow: auto;
             background: white;
+            position: relative;
         }
         
+        /* Esquina superior izquierda */
+        .corner-header {
+            width: 40px;
+            height: 22px;
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            left: 0;
+            z-index: 15;
+        }
+        
+        /* Números de fila */
         .row-numbers {
             position: sticky;
             left: 0;
             z-index: 5;
-            background: #f8f8f8;
+            background: #f8f9fa;
+            width: 40px;
         }
         
         .row-number {
-            height: 24px;
+            height: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-right: 1px solid #e0e0e0;
             border-bottom: 1px solid #e0e0e0;
             font-size: 12px;
-            color: #555;
-            background: #f8f8f8;
+            color: #444;
+            background: #f8f9fa;
+            cursor: pointer;
+            user-select: none;
         }
         
+        .row-number:hover {
+            background: #e9e9e9;
+        }
+        
+        .row-selected {
+            background: #d3e3fd !important;
+        }
+        
+        /* Encabezados de columna */
         .column-headers {
             display: flex;
             position: sticky;
             top: 0;
             z-index: 10;
-            background: #f8f8f8;
+            background: #f8f9fa;
+            height: 22px;
         }
         
         .column-header {
-            min-width: 120px;
-            height: 24px;
+            min-width: 100px;
+            height: 22px;
             border-right: 1px solid #e0e0e0;
             border-bottom: 1px solid #e0e0e0;
             padding: 0 5px;
@@ -110,8 +149,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            user-select: none;
         }
         
+        .column-header:hover {
+            background: #e9e9e9;
+        }
+        
+        .column-selected {
+            background: #d3e3fd !important;
+        }
+        
+        /* Filas y celdas */
         .sheet-rows {
             display: flex;
             flex-direction: column;
@@ -119,14 +170,24 @@
         
         .sheet-row {
             display: flex;
+            height: 22px;
+        }
+        
+        .sheet-row.selected {
+            background-color: #d3e3fd;
         }
         
         .sheet-cell {
-            min-width: 120px;
-            height: 24px;
+            min-width: 100px;
+            height: 22px;
             border-right: 1px solid #e0e0e0;
             border-bottom: 1px solid #e0e0e0;
             padding: 0;
+            position: relative;
+        }
+        
+        .sheet-cell.selected {
+            background-color: #d3e3fd;
         }
         
         .sheet-cell input {
@@ -137,6 +198,13 @@
             font-family: inherit;
             font-size: 12px;
             outline: none;
+            background: transparent;
+        }
+        
+        .sheet-cell input:focus {
+            outline: 2px solid #217346;
+            z-index: 2;
+            position: relative;
         }
         
         .coords-cell input {
@@ -144,8 +212,9 @@
             color: #0066cc;
         }
         
+        /* Barra de estado */
         .status-bar {
-            background: #eaeaea;
+            background: #f3f2f1;
             padding: 4px 10px;
             font-size: 12px;
             color: #555;
@@ -153,10 +222,20 @@
             position: fixed;
             bottom: 0;
             width: 100%;
+            height: 20px;
         }
         
         .error {
-            color: red;
+            color: #d83b01;
+        }
+        
+        /* Estilos para la selección */
+        .selection-overlay {
+            position: absolute;
+            background-color: rgba(0, 120, 215, 0.1);
+            border: 1px solid #0078d7;
+            pointer-events: none;
+            z-index: 1;
         }
     </style>
 </head>
@@ -179,16 +258,17 @@
             <div class="menu-dropdown">
                 <div class="menu-option" onclick="addColumn()">Add Column</div>
                 <div class="menu-option" onclick="addRow()">Add Row</div>
+                <div class="menu-option" onclick="copySelection()">Copy</div>
+                <div class="menu-option" onclick="pasteSelection()">Paste</div>
             </div>
         </div>
     </div>
     
     <div class="sheet-container">
+        <div class="corner-header" id="cornerHeader"></div>
+        <div class="column-headers" id="columnHeaders"></div>
         <div class="row-numbers" id="rowNumbers"></div>
-        <div>
-            <div class="column-headers" id="columnHeaders"></div>
-            <div class="sheet-rows" id="sheetRows"></div>
-        </div>
+        <div class="sheet-rows" id="sheetRows"></div>
     </div>
     
     <div class="status-bar" id="statusBar">
@@ -203,6 +283,10 @@
             features: []
         };
         let currentColumns = [];
+        let selectedRows = new Set();
+        let selectedColumns = new Set();
+        let clipboard = null;
+        let columnCounter = 1;
 
         // Función mejorada para cargar archivos
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -272,24 +356,40 @@
             
             currentColumns = ['geometry', ...Array.from(propertyKeys).sort()];
             
+            // Limpiar selecciones
+            selectedRows.clear();
+            selectedColumns.clear();
+            
             rebuildSheet();
         }
 
         function rebuildSheet() {
+            const cornerHeader = document.getElementById('cornerHeader');
             const columnHeaders = document.getElementById('columnHeaders');
             const rowNumbers = document.getElementById('rowNumbers');
             const sheetRows = document.getElementById('sheetRows');
             
             // Limpiar
+            cornerHeader.innerHTML = '';
             columnHeaders.innerHTML = '';
             rowNumbers.innerHTML = '';
             sheetRows.innerHTML = '';
             
             // Crear encabezados
-            currentColumns.forEach(col => {
+            currentColumns.forEach((col, colIndex) => {
                 const header = document.createElement('div');
                 header.className = 'column-header';
+                if (selectedColumns.has(colIndex)) {
+                    header.classList.add('column-selected');
+                }
                 header.textContent = col;
+                header.dataset.index = colIndex;
+                
+                // Evento para seleccionar columna
+                header.addEventListener('click', function() {
+                    selectColumn(colIndex);
+                });
+                
                 columnHeaders.appendChild(header);
             });
             
@@ -298,20 +398,38 @@
                 // Número de fila
                 const rowNumber = document.createElement('div');
                 rowNumber.className = 'row-number';
+                if (selectedRows.has(rowIndex)) {
+                    rowNumber.classList.add('row-selected');
+                }
                 rowNumber.textContent = rowIndex + 1;
+                rowNumber.dataset.index = rowIndex;
+                
+                // Evento para seleccionar fila
+                rowNumber.addEventListener('click', function() {
+                    selectRow(rowIndex);
+                });
+                
                 rowNumbers.appendChild(rowNumber);
                 
                 // Fila de datos
                 const row = document.createElement('div');
                 row.className = 'sheet-row';
+                if (selectedRows.has(rowIndex)) {
+                    row.classList.add('selected');
+                }
                 
-                currentColumns.forEach(col => {
+                currentColumns.forEach((col, colIndex) => {
                     const cell = document.createElement('div');
                     cell.className = 'sheet-cell';
                     if (col === 'geometry') cell.classList.add('coords-cell');
+                    if (selectedColumns.has(colIndex)) {
+                        cell.classList.add('selected');
+                    }
                     
                     const input = document.createElement('input');
                     input.type = 'text';
+                    input.dataset.row = rowIndex;
+                    input.dataset.col = colIndex;
                     
                     // Manejar geometry
                     if (col === 'geometry') {
@@ -374,23 +492,24 @@
             };
         }
 
+        // Función modificada para agregar columna sin solicitar nombre
         function addColumn() {
-            const colName = prompt("Nombre de la nueva columna:");
-            if (!colName) return;
+            // Generar nombre de columna por defecto
+            const newColName = `Column${columnCounter++}`;
             
-            if (!currentColumns.includes(colName)) {
-                currentColumns.push(colName);
+            if (!currentColumns.includes(newColName)) {
+                currentColumns.push(newColName);
             }
             
             geoData.features.forEach(feature => {
                 if (!feature.properties) feature.properties = {};
-                if (!(colName in feature.properties)) {
-                    feature.properties[colName] = '';
+                if (!(newColName in feature.properties)) {
+                    feature.properties[newColName] = '';
                 }
             });
             
             rebuildSheet();
-            updateStatus(`Columna agregada: ${colName}`);
+            updateStatus(`Columna agregada: ${newColName}`);
         }
 
         function addRow() {
@@ -440,6 +559,125 @@
             }
         }
 
+        // Funciones para selección de filas y columnas
+        function selectRow(rowIndex) {
+            if (selectedRows.has(rowIndex)) {
+                selectedRows.delete(rowIndex);
+            } else {
+                // Limpiar selección previa si no se está presionando Ctrl
+                if (!event.ctrlKey) {
+                    selectedRows.clear();
+                    selectedColumns.clear();
+                }
+                selectedRows.add(rowIndex);
+            }
+            rebuildSheet();
+            updateStatus(`Fila ${rowIndex + 1} seleccionada`);
+        }
+
+        function selectColumn(colIndex) {
+            if (selectedColumns.has(colIndex)) {
+                selectedColumns.delete(colIndex);
+            } else {
+                // Limpiar selección previa si no se está presionando Ctrl
+                if (!event.ctrlKey) {
+                    selectedRows.clear();
+                    selectedColumns.clear();
+                }
+                selectedColumns.add(colIndex);
+            }
+            rebuildSheet();
+            updateStatus(`Columna ${currentColumns[colIndex]} seleccionada`);
+        }
+
+        // Funciones para copiar y pegar
+        function copySelection() {
+            clipboard = {
+                rows: Array.from(selectedRows),
+                columns: Array.from(selectedColumns),
+                data: []
+            };
+            
+            // Copiar datos de filas seleccionadas
+            if (clipboard.rows.length > 0) {
+                clipboard.data = clipboard.rows.map(rowIndex => {
+                    const feature = geoData.features[rowIndex];
+                    return JSON.parse(JSON.stringify(feature)); // Deep copy
+                });
+                updateStatus(`${clipboard.rows.length} filas copiadas al portapapeles`);
+            }
+            // Copiar datos de columnas seleccionadas
+            else if (clipboard.columns.length > 0) {
+                clipboard.data = clipboard.columns.map(colIndex => {
+                    const colName = currentColumns[colIndex];
+                    const colData = {
+                        name: colName,
+                        values: []
+                    };
+                    
+                    geoData.features.forEach(feature => {
+                        if (colName === 'geometry') {
+                            colData.values.push(feature.geometry?.coordinates || [0, 0]);
+                        } else {
+                            colData.values.push(feature.properties?.[colName] || '');
+                        }
+                    });
+                    
+                    return colData;
+                });
+                updateStatus(`${clipboard.columns.length} columnas copiadas al portapapeles`);
+            }
+        }
+
+        function pasteSelection() {
+            if (!clipboard) {
+                updateStatus("No hay datos en el portapapeles", true);
+                return;
+            }
+            
+            // Pegar filas
+            if (clipboard.data.length > 0 && clipboard.rows.length > 0) {
+                // Agregar nuevas filas con los datos copiados
+                clipboard.data.forEach(featureData => {
+                    geoData.features.push(JSON.parse(JSON.stringify(featureData))); // Deep copy
+                });
+                updateStatus(`${clipboard.data.length} filas pegadas`);
+                rebuildSheet();
+            }
+            // Pegar columnas
+            else if (clipboard.data.length > 0 && clipboard.columns.length > 0) {
+                clipboard.data.forEach(colData => {
+                    const colName = colData.name;
+                    let newColName = colName;
+                    
+                    // Si la columna ya existe, crear un nombre único
+                    if (currentColumns.includes(colName) && colName !== 'geometry') {
+                        newColName = `${colName}_copy`;
+                        let counter = 1;
+                        while (currentColumns.includes(newColName)) {
+                            newColName = `${colName}_copy${counter++}`;
+                        }
+                        currentColumns.push(newColName);
+                    }
+                    
+                    // Pegar valores en las filas existentes
+                    geoData.features.forEach((feature, i) => {
+                        if (i < colData.values.length) {
+                            if (newColName === 'geometry') {
+                                if (!feature.geometry) feature.geometry = { type: "Point" };
+                                feature.geometry.coordinates = colData.values[i];
+                            } else {
+                                if (!feature.properties) feature.properties = {};
+                                feature.properties[newColName] = colData.values[i];
+                            }
+                        }
+                    });
+                });
+                updateStatus(`${clipboard.data.length} columnas pegadas`);
+                rebuildSheet();
+            }
+        }
+
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
             // Cargar datos vacíos al inicio
@@ -448,3 +686,4 @@
     </script>
 </body>
 </html>
+
