@@ -96,7 +96,8 @@
         .sheet-table {
             border-collapse: collapse;
             table-layout: fixed; /* Importante para el redimensionamiento */
-            width: 100%;
+            width: max-content; /* Permitir que la tabla sea más ancha que el contenedor */
+            min-width: 100%; /* Asegurar que ocupe al menos todo el ancho disponible */
         }
         
         .sheet-table th, .sheet-table td {
@@ -347,12 +348,18 @@
             height: 16px;
             margin-right: 4px;
         }
+        
+        /* Estilos para la primera fila (nombres de propiedades) */
+        .property-name-row td input {
+            font-weight: bold;
+            color: #217346;
+        }
     </style>
 </head>
 <body>
     <div class="title-bar">
         <span>GeoJSON Editor</span>
-        <span id="titleStatus">Ready</span>
+        <span id="titleStatus">Ejemplo cargado</span>
     </div>
     
     <div class="menu-bar">
@@ -401,203 +408,202 @@
             </svg>
             Redo
         </button>
-        <div class="toolbar-separator" style="width: 1px; height: 20px; background: #d4d4d4; margin: 0 10px;"></div>
-        <button class="toolbar-toggle" onclick="toggleWrapMode()" id="wrapButton" title="Toggle Wrap Text">
+        <button class="toolbar-toggle active" onclick="toggleWrapMode()" id="wrapButton" title="Toggle Wrap Text">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="17 7 17 13 7 13 7 7"></polyline>
-                <polyline points="7 17 17 17"></polyline>
+                <polyline points="17 1 21 5 17 9"></polyline>
+                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                <polyline points="7 23 3 19 7 15"></polyline>
+                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
             </svg>
             Wrap Text
         </button>
     </div>
     
-    <div class="sheet-container" id="sheetContainer">
-        <table class="sheet-table" id="sheetTable">
+    <div class="sheet-container">
+        <table id="sheetTable" class="sheet-table">
             <thead>
                 <tr id="columnHeadersRow">
                     <th class="corner-header-cell"></th>
                 </tr>
             </thead>
             <tbody id="sheetTableBody">
+                <!-- Filas de datos generadas dinámicamente -->
             </tbody>
         </table>
     </div>
     
-    <div class="status-bar" id="statusBar">
-        Ready
-    </div>
+    <div class="status-bar" id="statusBar">Ready</div>
     
     <input type="file" id="fileInput" style="display: none;" accept=".geojson,.json">
-
+    
     <script>
-        // Datos del archivo GALO-1.geojson precargados
-        let geoData = {
-          "type": "FeatureCollection",
-          "name": "pozo_GALO-1",
-          "crs": {
-            "type": "name",
-            "properties": {
-              "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
-            }
-          },
-          "xy_coordinate_resolution": 1E-15,
-          "features": [
-            {
-              "type": "Feature",
-              "properties": {
-                "pozo": "GALO-1",
-                "campo": "TLACOLULA",
-                "entidad": "VERACRUZ DE IGNACIO DE LA LLAVE",
-                "ubicacin": "TERRESTRE",
-                "clasificac": "EXPLORATORIO",
-                "estado_act": "INACTIVO",
-                "tipo_de_hi": "ACEITE",
-                "fecha_inic": "21-FEB-1979",
-                "fecha_fin_": "23-MAY-1984",
-                "profundida": 1790.0,
-                "profundi_1": 1790.0,
-                "trayectori": "VERTICAL",
-                "disponible": "DISPONIBLE",
-                "Nombre_corto": "G-1"
-              },
-              "geometry": {
-                "type": "Point",
-                "coordinates": [
-                  -97.9602415,
-                  21.02323612
-                ]
-              }
-            }
-          ]
+        // Variables globales
+        let geoData = { 
+            type: "FeatureCollection", 
+            features: [
+                {
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [-97.360245, 21.02]
+                    },
+                    properties: {
+                        Nombre_corto: "TLACOLULA",
+                        campo: "EXPLORATORIO",
+                        clasificac: "DISPONIBLE",
+                        entidad: "VERACRUZ DE IGNACIO DE LA LLAVE",
+                        estado_act: "INACTIVO",
+                        fecha_fin: "23-MAY-1984",
+                        fecha_inic: "21-FEB-1979",
+                        pozo: "GALO-1"
+                    }
+                },
+                {
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [-97.361245, 21.03]
+                    },
+                    properties: {
+                        Nombre_corto: "TLACOLULA",
+                        campo: "EXPLORATORIO",
+                        clasificac: "DISPONIBLE",
+                        entidad: "VERACRUZ DE IGNACIO DE LA LLAVE",
+                        estado_act: "INACTIVO",
+                        fecha_fin: "23-MAY-1984",
+                        fecha_inic: "21-FEB-1979",
+                        pozo: "GALO-2"
+                    }
+                },
+                {
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [-97.362245, 21.04]
+                    },
+                    properties: {
+                        Nombre_corto: "TLACOLULA",
+                        campo: "EXPLORATORIO",
+                        clasificac: "DISPONIBLE",
+                        entidad: "VERACRUZ DE IGNACIO DE LA LLAVE",
+                        estado_act: "INACTIVO",
+                        fecha_fin: "23-MAY-1984",
+                        fecha_inic: "21-FEB-1979",
+                        pozo: "GALO-3"
+                    }
+                }
+            ]
         };
-        
-        // Variables para el historial de acciones (Undo/Redo)
-        let history = [];
-        let historyIndex = -1;
-        const MAX_HISTORY = 50;
-        
         let currentColumns = [];
+        let columnWidths = {};
         let selectedRows = new Set();
         let selectedColumns = new Set();
-        let clipboard = null;
-        let columnCounter = 1;
-        let activeMenu = null;
-        let isWrapMode = true; // Por defecto, el modo wrap está activado
-        let columnWidths = {}; // Almacena los anchos personalizados de las columnas
-        let startResizeX = 0; // Para el redimensionamiento de columnas
-        let currentResizeColumnIndex = null; // Índice de la columna que se está redimensionando
-        let initialColumnWidth = 0; // Ancho inicial de la columna que se está redimensionando
-
-        // Mejorar el manejo de menús
-        document.querySelectorAll('.menu-item').forEach(menuItem => {
-            menuItem.addEventListener('click', function(e) {
-                e.stopPropagation();
-                
-                // Si este menú ya está activo, cerrarlo
-                if (this.classList.contains('active')) {
-                    this.classList.remove('active');
-                    activeMenu = null;
-                    return;
-                }
-                
-                // Cerrar cualquier otro menú activo
-                if (activeMenu) {
-                    activeMenu.classList.remove('active');
-                }
-                
-                // Activar este menú
-                this.classList.add('active');
-                activeMenu = this;
-            });
-        });
+        let isWrapMode = true; // Por defecto activado
+        let undoStack = [];
+        let redoStack = [];
+        let maxUndoSteps = 50;
+        let clipboardData = null;
+        let isResizing = false;
+        let startX, startWidth, currentColIndex;
+        let columnNameMap = {}; // Mapeo entre letras de columna y nombres de propiedades
         
-        // Cerrar menús al hacer clic en cualquier parte fuera de ellos
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.menu-item') && activeMenu) {
-                activeMenu.classList.remove('active');
-                activeMenu = null;
-            }
-        });
-        
-        // Evitar que los clics en las opciones de menú cierren el menú inmediatamente
-        document.querySelectorAll('.menu-option').forEach(option => {
-            option.addEventListener('click', function(e) {
-                e.stopPropagation();
-                
-                // Cerrar el menú después de un breve retraso para permitir que la acción se complete
-                setTimeout(() => {
-                    if (activeMenu) {
-                        activeMenu.classList.remove('active');
-                        activeMenu = null;
-                    }
-                }, 100);
-            });
-        });
-        
-        // Configurar el botón de abrir archivo
-        document.getElementById('openFileOption').addEventListener('click', function() {
-            document.getElementById('fileInput').click();
-        });
-
-        // Función mejorada para cargar archivos
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            // Procesar los datos de ejemplo
+            processGeoData();
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsedData = JSON.parse(e.target.result);
+            // Configurar eventos de menú
+            setupMenuEvents();
+            
+            // Configurar eventos de teclado
+            setupKeyboardEvents();
+        });
+        
+        // Configurar eventos de menú
+        function setupMenuEvents() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Cerrar todos los menús abiertos
+                    menuItems.forEach(mi => {
+                        if (mi !== item) mi.classList.remove('active');
+                    });
                     
-                    // Validación básica del GeoJSON
-                    if (!parsedData.type || parsedData.type !== "FeatureCollection") {
-                        throw new Error("El archivo no es un FeatureCollection GeoJSON válido");
-                    }
-                    
-                    if (!Array.isArray(parsedData.features)) {
-                        throw new Error("El campo 'features' debe ser un array");
-                    }
-                    
-                    // Guardar estado actual para Undo
-                    saveToHistory();
-                    
-                    geoData = parsedData;
-                    updateStatus(`Archivo cargado: ${file.name}`);
-                    loadDataIntoSheet();
-                    
-                    // Debug: mostrar contenido en consola
-                    console.log("GeoJSON cargado correctamente:", geoData);
-                    if (geoData.features.length > 0) {
-                        console.log("Primer feature:", geoData.features[0]);
-                    }
-                } catch (error) {
-                    console.error("Error al cargar el archivo:", error);
-                    updateStatus(`Error: ${error.message}`, true);
-                    
-                    // Crear estructura vacía si hay error
-                    geoData = {
-                        type: "FeatureCollection",
-                        features: [createEmptyFeature()]
+                    // Alternar el estado del menú actual
+                    item.classList.toggle('active');
+                    e.stopPropagation();
+                });
+            });
+            
+            // Cerrar menús al hacer clic fuera
+            document.addEventListener('click', function() {
+                menuItems.forEach(mi => mi.classList.remove('active'));
+            });
+            
+            // Configurar evento para abrir archivo
+            document.getElementById('openFileOption').addEventListener('click', function() {
+                document.getElementById('fileInput').click();
+            });
+            
+            document.getElementById('fileInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            geoData = JSON.parse(e.target.result);
+                            processGeoData();
+                            updateStatus(`Archivo ${file.name} cargado correctamente`);
+                            document.getElementById('titleStatus').textContent = `Archivo ${file.name} cargado`;
+                            
+                            // Limpiar el input para permitir cargar el mismo archivo nuevamente
+                            document.getElementById('fileInput').value = '';
+                        } catch (error) {
+                            updateStatus(`Error al procesar el archivo: ${error.message}`, true);
+                        }
                     };
-                    loadDataIntoSheet();
+                    reader.readAsText(file);
                 }
-            };
+            });
+        }
+        
+        // Configurar eventos de teclado
+        function setupKeyboardEvents() {
+            document.addEventListener('keydown', function(e) {
+                // Undo: Ctrl+Z
+                if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    undoAction();
+                }
+                // Redo: Ctrl+Y
+                else if (e.ctrlKey && e.key === 'y') {
+                    e.preventDefault();
+                    redoAction();
+                }
+                // Delete: Delete key
+                else if (e.key === 'Delete') {
+                    e.preventDefault();
+                    deleteSelected();
+                }
+                // Copy: Ctrl+C
+                else if (e.ctrlKey && e.key === 'c') {
+                    e.preventDefault();
+                    copySelection();
+                }
+                // Paste: Ctrl+V
+                else if (e.ctrlKey && e.key === 'v') {
+                    e.preventDefault();
+                    pasteSelection();
+                }
+            });
+        }
+        
+        // Función para procesar los datos GeoJSON
+        function processGeoData() {
+            // Guardar estado actual para Undo
+            saveToHistory();
             
-            reader.onerror = function() {
-                updateStatus("Error al leer el archivo", true);
-            };
-            
-            reader.readAsText(file);
-        });
-
-        // Función mejorada para cargar datos
-        function loadDataIntoSheet() {
-            // Verificar si hay datos
-            if (!geoData.features || geoData.features.length === 0) {
-                geoData.features = [createEmptyFeature()];
-                updateStatus("GeoJSON vacío - creada plantilla", true);
-            }
-
             // Obtener todas las columnas únicas
             const propertyKeys = new Set();
             geoData.features.forEach(feature => {
@@ -619,6 +625,18 @@
             updateWrapButton();
         }
 
+        // Función para convertir índice numérico a nombre de columna estilo Excel (A, B, C, ..., Z, AA, AB, ...)
+        function getExcelColumnName(index) {
+            let columnName = '';
+            
+            while (index >= 0) {
+                columnName = String.fromCharCode(65 + (index % 26)) + columnName;
+                index = Math.floor(index / 26) - 1;
+            }
+            
+            return columnName;
+        }
+
         // Función para reconstruir la tabla completa
         function rebuildSheet() {
             const table = document.getElementById('sheetTable');
@@ -629,12 +647,21 @@
             headerRow.innerHTML = '<th class="corner-header-cell"></th>'; // Restaurar celda de esquina
             tableBody.innerHTML = '';
             
-            // Crear encabezados de columna
+            // Reiniciar mapeo de nombres de columna
+            columnNameMap = {};
+            
+            // Crear encabezados de columna estilo Excel (A, B, C, ...)
             currentColumns.forEach((col, colIndex) => {
                 const th = document.createElement('th');
                 th.dataset.index = colIndex;
-                th.textContent = col;
-                th.title = col; // Tooltip
+                
+                // Usar letras de Excel como encabezados
+                const excelColName = getExcelColumnName(colIndex);
+                th.textContent = excelColName;
+                th.title = col; // Tooltip con el nombre original de la propiedad
+                
+                // Guardar mapeo entre letra de columna y nombre de propiedad
+                columnNameMap[excelColName] = col;
                 
                 // Aplicar ancho personalizado si existe
                 const colWidth = columnWidths[colIndex] || 120; // Ancho por defecto 120px
@@ -651,44 +678,6 @@
                     selectColumn(colIndex);
                 });
                 
-                // Evento para editar el nombre de la columna con doble clic
-                th.addEventListener('dblclick', function(e) {
-                    // No permitir editar la columna geometry
-                    if (col === 'geometry') {
-                        updateStatus("No se puede cambiar el nombre de la columna geometry", true);
-                        return;
-                    }
-                    
-                    // Crear un input para editar el nombre
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.className = 'column-header-editor';
-                    input.value = col;
-                    input.dataset.originalName = col;
-                    input.dataset.colIndex = colIndex;
-                    
-                    // Reemplazar el contenido del encabezado con el input
-                    th.textContent = '';
-                    th.appendChild(input);
-                    input.focus();
-                    input.select();
-                    
-                    // Manejar la finalización de la edición
-                    input.addEventListener('blur', finishColumnRename);
-                    input.addEventListener('keydown', function(e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            input.blur();
-                        } else if (e.key === 'Escape') {
-                            e.preventDefault();
-                            input.value = input.dataset.originalName;
-                            input.blur();
-                        }
-                    });
-                    
-                    e.stopPropagation();
-                });
-                
                 // Agregar resizer para cambiar el ancho de la columna
                 const resizer = document.createElement('div');
                 resizer.className = 'column-resizer';
@@ -698,6 +687,110 @@
                 
                 headerRow.appendChild(th);
             });
+            
+            // Crear fila para nombres de propiedades (primera fila)
+            const propertyNameRow = document.createElement('tr');
+            propertyNameRow.className = 'property-name-row';
+            
+            // Celda de número de fila para la fila de nombres de propiedades
+            const propertyRowNumTd = document.createElement('td');
+            propertyRowNumTd.className = 'row-number-cell';
+            propertyRowNumTd.textContent = '1';
+            propertyNameRow.appendChild(propertyRowNumTd);
+            
+            // Celdas para nombres de propiedades
+            currentColumns.forEach((col, colIndex) => {
+                const td = document.createElement('td');
+                td.dataset.row = -1; // Usamos -1 para indicar que es la fila de nombres de propiedades
+                td.dataset.col = colIndex;
+                
+                // Aplicar ancho personalizado si existe
+                const colWidth = columnWidths[colIndex] || 120;
+                td.style.width = colWidth + 'px';
+                td.style.minWidth = colWidth + 'px';
+                td.style.maxWidth = colWidth + 'px';
+                
+                if (selectedColumns.has(colIndex)) {
+                    td.classList.add('cell-selected');
+                }
+                
+                // Aplicar modo wrap si está activado
+                if (isWrapMode) {
+                    td.classList.add('wrap-mode');
+                }
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.dataset.row = -1;
+                input.dataset.col = colIndex;
+                input.value = col; // Nombre de la propiedad
+                
+                // Agregar tooltip para valores largos
+                if (col.length > 15) {
+                    td.setAttribute('data-tooltip', col);
+                }
+                
+                // Evento para cambiar el nombre de la propiedad
+                input.addEventListener('change', function(e) {
+                    // Guardar estado actual para Undo
+                    saveToHistory();
+                    
+                    const oldName = currentColumns[colIndex];
+                    const newName = e.target.value.trim();
+                    
+                    // Validar que el nuevo nombre no esté vacío
+                    if (!newName) {
+                        updateStatus("El nombre de la propiedad no puede estar vacío", true);
+                        e.target.value = oldName;
+                        return;
+                    }
+                    
+                    // Validar que el nuevo nombre no esté duplicado
+                    if (newName !== oldName && currentColumns.includes(newName)) {
+                        updateStatus("Ya existe una propiedad con ese nombre", true);
+                        e.target.value = oldName;
+                        return;
+                    }
+                    
+                    // No permitir cambiar el nombre de la columna geometry
+                    if (oldName === 'geometry') {
+                        updateStatus("No se puede cambiar el nombre de la columna geometry", true);
+                        e.target.value = 'geometry';
+                        return;
+                    }
+                    
+                    // Actualizar el nombre de la propiedad
+                    currentColumns[colIndex] = newName;
+                    
+                    // Actualizar el mapeo de nombres de columna
+                    const excelColName = getExcelColumnName(colIndex);
+                    columnNameMap[excelColName] = newName;
+                    
+                    // Actualizar los datos
+                    geoData.features.forEach(feature => {
+                        if (feature.properties && feature.properties[oldName] !== undefined) {
+                            feature.properties[newName] = feature.properties[oldName];
+                            if (oldName !== newName) {
+                                delete feature.properties[oldName];
+                            }
+                        }
+                    });
+                    
+                    // Actualizar tooltip
+                    if (newName.length > 15) {
+                        td.setAttribute('data-tooltip', newName);
+                    } else {
+                        td.removeAttribute('data-tooltip');
+                    }
+                    
+                    updateStatus(`Propiedad renombrada de "${oldName}" a "${newName}"`);
+                });
+                
+                td.appendChild(input);
+                propertyNameRow.appendChild(td);
+            });
+            
+            tableBody.appendChild(propertyNameRow);
             
             // Crear filas de datos
             geoData.features.forEach((feature, rowIndex) => {
@@ -712,7 +805,7 @@
                 if (selectedRows.has(rowIndex)) {
                     rowNumTd.classList.add('row-selected');
                 }
-                rowNumTd.textContent = rowIndex + 1;
+                rowNumTd.textContent = rowIndex + 2; // +2 porque la primera fila es para nombres de propiedades
                 rowNumTd.dataset.index = rowIndex;
                 rowNumTd.addEventListener('click', function() {
                     selectRow(rowIndex);
@@ -763,7 +856,7 @@
                                 if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
                                     if (!feature.geometry) feature.geometry = { type: "Point" };
                                     feature.geometry.coordinates = coords;
-                                    updateStatus(`Coordenadas actualizadas en fila ${rowIndex + 1}`);
+                                    updateStatus(`Coordenadas actualizadas en fila ${rowIndex + 2}`);
                                 } else {
                                     throw new Error("Formato de coordenadas inválido");
                                 }
@@ -797,7 +890,7 @@
                                 td.removeAttribute('data-tooltip');
                             }
                             
-                            updateStatus(`Propiedad ${col} actualizada en fila ${rowIndex + 1}`);
+                            updateStatus(`Propiedad ${col} actualizada en fila ${rowIndex + 2}`);
                         });
                     }
                     
@@ -807,158 +900,424 @@
                 
                 tableBody.appendChild(tr);
             });
-            
-            updateStatus(`Datos cargados: ${geoData.features.length} registros`);
         }
-
-        // Función para iniciar el redimensionamiento de columnas
+        
+        // Función para seleccionar una fila
+        function selectRow(rowIndex) {
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
+            // Limpiar selecciones anteriores
+            selectedRows.clear();
+            selectedColumns.clear();
+            
+            // Seleccionar la fila
+            selectedRows.add(rowIndex);
+            
+            // Actualizar la visualización
+            rebuildSheet();
+            updateStatus(`Fila ${rowIndex + 2} seleccionada`);
+        }
+        
+        // Función para seleccionar una columna
+        function selectColumn(colIndex) {
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
+            // Limpiar selecciones anteriores
+            selectedRows.clear();
+            selectedColumns.clear();
+            
+            // Seleccionar la columna
+            selectedColumns.add(colIndex);
+            
+            // Actualizar la visualización
+            rebuildSheet();
+            
+            // Mostrar el nombre de la columna en el estado
+            const excelColName = getExcelColumnName(colIndex);
+            const propertyName = columnNameMap[excelColName];
+            updateStatus(`Columna ${excelColName} (${propertyName}) seleccionada`);
+        }
+        
+        // Función para iniciar el redimensionamiento de columna
         function startColumnResize(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            currentResizeColumnIndex = parseInt(this.dataset.colIndex);
-            startResizeX = e.clientX;
+            isResizing = true;
+            currentColIndex = parseInt(this.dataset.colIndex);
+            startX = e.pageX;
+            startWidth = columnWidths[currentColIndex] || 120;
             
-            // Obtener el ancho actual de la columna
-            const header = document.querySelector(`th[data-index="${currentResizeColumnIndex}"]`);
-            initialColumnWidth = header.offsetWidth;
-            
-            // Agregar eventos para el arrastre
+            // Agregar eventos temporales para el redimensionamiento
             document.addEventListener('mousemove', doColumnResize);
-            document.addEventListener('mouseup', endColumnResize);
+            document.addEventListener('mouseup', stopColumnResize);
             
             // Cambiar el cursor durante el redimensionamiento
             document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-        }
-
-        // Función para realizar el redimensionamiento durante el arrastre
-        function doColumnResize(e) {
-            if (currentResizeColumnIndex === null) return;
             
-            const diff = e.clientX - startResizeX;
-            const newWidth = Math.max(60, initialColumnWidth + diff); // Mínimo 60px
+            // Mostrar una guía visual para el redimensionamiento
+            const resizeGuide = document.createElement('div');
+            resizeGuide.id = 'resizeGuide';
+            resizeGuide.style.position = 'absolute';
+            resizeGuide.style.top = '0';
+            resizeGuide.style.bottom = '0';
+            resizeGuide.style.width = '1px';
+            resizeGuide.style.backgroundColor = '#0078d7';
+            resizeGuide.style.zIndex = '1000';
             
-            // Actualizar el ancho de la columna en el objeto
-            columnWidths[currentResizeColumnIndex] = newWidth;
+            // Calcular la posición inicial de la guía
+            const table = document.getElementById('sheetTable');
+            const headerCells = table.querySelectorAll('th');
+            let leftOffset = 0;
             
-            // Actualizar el ancho del encabezado y todas las celdas de la columna
-            const header = document.querySelector(`th[data-index="${currentResizeColumnIndex}"]`);
-            const cells = document.querySelectorAll(`td[data-col="${currentResizeColumnIndex}"]`);
-            
-            if (header) {
-                header.style.width = newWidth + 'px';
-                header.style.minWidth = newWidth + 'px';
-                header.style.maxWidth = newWidth + 'px';
+            for (let i = 0; i <= currentColIndex; i++) {
+                leftOffset += (columnWidths[i] || 120);
             }
             
-            cells.forEach(cell => {
-                cell.style.width = newWidth + 'px';
-                cell.style.minWidth = newWidth + 'px';
-                cell.style.maxWidth = newWidth + 'px';
-            });
+            resizeGuide.style.left = leftOffset + 'px';
+            document.querySelector('.sheet-container').appendChild(resizeGuide);
         }
-
-        // Función para finalizar el redimensionamiento
-        function endColumnResize() {
-            currentResizeColumnIndex = null;
-            document.removeEventListener('mousemove', doColumnResize);
-            document.removeEventListener('mouseup', endColumnResize);
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
+        
+        // Función para realizar el redimensionamiento de columna
+        function doColumnResize(e) {
+            if (!isResizing) return;
             
-            // Guardar estado para Undo
-            saveToHistory();
-        }
-
-        // Función para ajustar automáticamente el ancho de una columna con doble clic
-        function autoFitColumn(colIndex) {
-            // Implementar la lógica para ajustar automáticamente el ancho de la columna
-            // basado en el contenido más largo
-            let maxWidth = 100; // Ancho mínimo
+            const delta = e.pageX - startX;
+            const newWidth = Math.max(60, startWidth + delta); // Mínimo 60px
             
-            // Obtener el ancho necesario para el encabezado
-            const colName = currentColumns[colIndex];
-            const headerWidth = colName.length * 8 + 20; // Estimación aproximada
-            maxWidth = Math.max(maxWidth, headerWidth);
-            
-            // Obtener el ancho necesario para los datos
-            geoData.features.forEach(feature => {
-                let value = '';
-                if (colName === 'geometry' && feature.geometry) {
-                    value = feature.geometry.coordinates.join(', ');
-                } else if (feature.properties && colName in feature.properties) {
-                    value = String(feature.properties[colName]);
+            // Actualizar la guía visual
+            const resizeGuide = document.getElementById('resizeGuide');
+            if (resizeGuide) {
+                const table = document.getElementById('sheetTable');
+                const headerCells = table.querySelectorAll('th');
+                let leftOffset = 0;
+                
+                for (let i = 0; i < currentColIndex; i++) {
+                    leftOffset += (columnWidths[i] || 120);
                 }
                 
-                const valueWidth = value.length * 8 + 20; // Estimación aproximada
-                maxWidth = Math.max(maxWidth, valueWidth);
-            });
+                leftOffset += newWidth;
+                resizeGuide.style.left = leftOffset + 'px';
+            }
+        }
+        
+        // Función para detener el redimensionamiento de columna
+        function stopColumnResize(e) {
+            if (!isResizing) return;
             
-            // Limitar el ancho máximo
-            maxWidth = Math.min(maxWidth, 300);
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
+            const delta = e.pageX - startX;
+            const newWidth = Math.max(60, startWidth + delta); // Mínimo 60px
             
             // Actualizar el ancho de la columna
-            columnWidths[colIndex] = maxWidth;
+            columnWidths[currentColIndex] = newWidth;
             
-            // Reconstruir la hoja para aplicar el nuevo ancho
+            // Eliminar eventos temporales
+            document.removeEventListener('mousemove', doColumnResize);
+            document.removeEventListener('mouseup', stopColumnResize);
+            
+            // Restaurar el cursor
+            document.body.style.cursor = '';
+            
+            // Eliminar la guía visual
+            const resizeGuide = document.getElementById('resizeGuide');
+            if (resizeGuide) {
+                resizeGuide.remove();
+            }
+            
+            // Actualizar la visualización
             rebuildSheet();
-        }
-
-        // Función para finalizar la edición del nombre de una columna
-        function finishColumnRename() {
-            const input = this;
-            const newName = input.value.trim();
-            const originalName = input.dataset.originalName;
-            const colIndex = parseInt(input.dataset.colIndex);
             
-            // Validar que el nombre no esté vacío
+            isResizing = false;
+            
+            // Mostrar el nuevo ancho en el estado
+            const excelColName = getExcelColumnName(currentColIndex);
+            const propertyName = columnNameMap[excelColName];
+            updateStatus(`Columna ${excelColName} (${propertyName}) redimensionada a ${newWidth}px`);
+        }
+        
+        // Función para finalizar la edición del nombre de columna
+        function finishColumnRename(e) {
+            const input = e.target;
+            const colIndex = parseInt(input.dataset.colIndex);
+            const originalName = input.dataset.originalName;
+            const newName = input.value.trim();
+            
+            // Validar que el nuevo nombre no esté vacío
             if (!newName) {
                 updateStatus("El nombre de la columna no puede estar vacío", true);
-                input.parentNode.textContent = originalName;
+                input.parentElement.textContent = originalName;
                 return;
             }
             
-            // Validar que el nombre no exista ya
+            // Validar que el nuevo nombre no esté duplicado
             if (newName !== originalName && currentColumns.includes(newName)) {
-                updateStatus(`Ya existe una columna con el nombre "${newName}"`, true);
-                input.parentNode.textContent = originalName;
-                return;
-            }
-            
-            // Si el nombre no ha cambiado, simplemente restaurar el encabezado
-            if (newName === originalName) {
-                input.parentNode.textContent = originalName;
+                updateStatus("Ya existe una columna con ese nombre", true);
+                input.parentElement.textContent = originalName;
                 return;
             }
             
             // Guardar estado actual para Undo
             saveToHistory();
             
-            // Actualizar el nombre de la columna en la lista de columnas
+            // Actualizar el nombre de la columna
             currentColumns[colIndex] = newName;
             
             // Actualizar los datos
             geoData.features.forEach(feature => {
-                if (feature.properties && originalName in feature.properties) {
-                    // Copiar el valor a la nueva propiedad
+                if (feature.properties && feature.properties[originalName] !== undefined) {
                     feature.properties[newName] = feature.properties[originalName];
-                    // Eliminar la propiedad original
-                    delete feature.properties[originalName];
+                    if (originalName !== newName) {
+                        delete feature.properties[originalName];
+                    }
                 }
             });
             
-            // Reconstruir la hoja
+            // Actualizar la visualización
             rebuildSheet();
-            updateStatus(`Columna renombrada: ${originalName} → ${newName}`);
+            
+            updateStatus(`Columna renombrada de "${originalName}" a "${newName}"`);
         }
-
-        // Función para alternar el modo wrap
-        function toggleWrapMode() {
+        
+        // Función para agregar una nueva columna
+        function addColumn() {
             // Guardar estado actual para Undo
             saveToHistory();
             
+            // Generar un nombre único para la nueva columna
+            let newColName = "Column1";
+            let counter = 1;
+            while (currentColumns.includes(newColName)) {
+                counter++;
+                newColName = `Column${counter}`;
+            }
+            
+            // Agregar la nueva columna
+            currentColumns.push(newColName);
+            
+            // Actualizar la visualización
+            rebuildSheet();
+            
+            updateStatus(`Nueva columna "${newColName}" agregada`);
+        }
+        
+        // Función para agregar una nueva fila
+        function addRow() {
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
+            // Crear una nueva feature
+            const newFeature = {
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [0, 0]
+                },
+                properties: {}
+            };
+            
+            // Agregar propiedades vacías para todas las columnas
+            currentColumns.forEach(col => {
+                if (col !== 'geometry') {
+                    newFeature.properties[col] = "";
+                }
+            });
+            
+            // Agregar la nueva feature
+            geoData.features.push(newFeature);
+            
+            // Actualizar la visualización
+            rebuildSheet();
+            
+            updateStatus(`Nueva fila agregada`);
+        }
+        
+        // Función para eliminar la selección actual
+        function deleteSelected() {
+            // Si no hay nada seleccionado, no hacer nada
+            if (selectedRows.size === 0 && selectedColumns.size === 0) {
+                updateStatus("No hay nada seleccionado para eliminar", true);
+                return;
+            }
+            
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
+            // Eliminar filas seleccionadas
+            if (selectedRows.size > 0) {
+                // Convertir Set a Array y ordenar en orden descendente
+                const rowsToDelete = Array.from(selectedRows).sort((a, b) => b - a);
+                
+                // Eliminar las filas en orden descendente para evitar problemas con los índices
+                rowsToDelete.forEach(rowIndex => {
+                    geoData.features.splice(rowIndex, 1);
+                });
+                
+                selectedRows.clear();
+                updateStatus(`${rowsToDelete.length} fila(s) eliminada(s)`);
+            }
+            
+            // Eliminar columnas seleccionadas
+            if (selectedColumns.size > 0) {
+                // Convertir Set a Array y ordenar en orden descendente
+                const colsToDelete = Array.from(selectedColumns).sort((a, b) => b - a);
+                
+                colsToDelete.forEach(colIndex => {
+                    const colName = currentColumns[colIndex];
+                    
+                    // No permitir eliminar la columna geometry
+                    if (colName === 'geometry') {
+                        updateStatus("No se puede eliminar la columna geometry", true);
+                        return;
+                    }
+                    
+                    // Eliminar la propiedad de todas las features
+                    geoData.features.forEach(feature => {
+                        if (feature.properties && feature.properties[colName] !== undefined) {
+                            delete feature.properties[colName];
+                        }
+                    });
+                    
+                    // Eliminar la columna de la lista
+                    currentColumns.splice(colIndex, 1);
+                    
+                    // Eliminar el ancho personalizado
+                    delete columnWidths[colIndex];
+                    
+                    // Reajustar los anchos de columna
+                    const newColumnWidths = {};
+                    Object.keys(columnWidths).forEach(key => {
+                        const keyNum = parseInt(key);
+                        if (keyNum < colIndex) {
+                            newColumnWidths[keyNum] = columnWidths[keyNum];
+                        } else if (keyNum > colIndex) {
+                            newColumnWidths[keyNum - 1] = columnWidths[keyNum];
+                        }
+                    });
+                    columnWidths = newColumnWidths;
+                });
+                
+                selectedColumns.clear();
+                updateStatus(`${colsToDelete.length} columna(s) eliminada(s)`);
+            }
+            
+            // Actualizar la visualización
+            rebuildSheet();
+        }
+        
+        // Función para copiar la selección actual
+        function copySelection() {
+            // Si no hay nada seleccionado, no hacer nada
+            if (selectedRows.size === 0 && selectedColumns.size === 0) {
+                updateStatus("No hay nada seleccionado para copiar", true);
+                return;
+            }
+            
+            clipboardData = {
+                type: selectedRows.size > 0 ? 'row' : 'column',
+                data: []
+            };
+            
+            // Copiar filas seleccionadas
+            if (selectedRows.size > 0) {
+                selectedRows.forEach(rowIndex => {
+                    clipboardData.data.push(JSON.parse(JSON.stringify(geoData.features[rowIndex])));
+                });
+                updateStatus(`${selectedRows.size} fila(s) copiada(s)`);
+            }
+            
+            // Copiar columnas seleccionadas
+            if (selectedColumns.size > 0) {
+                selectedColumns.forEach(colIndex => {
+                    const colName = currentColumns[colIndex];
+                    const colData = {
+                        name: colName,
+                        values: []
+                    };
+                    
+                    geoData.features.forEach(feature => {
+                        if (colName === 'geometry') {
+                            colData.values.push(feature.geometry ? JSON.parse(JSON.stringify(feature.geometry)) : null);
+                        } else {
+                            colData.values.push(feature.properties?.[colName] || "");
+                        }
+                    });
+                    
+                    clipboardData.data.push(colData);
+                });
+                updateStatus(`${selectedColumns.size} columna(s) copiada(s)`);
+            }
+        }
+        
+        // Función para pegar la selección copiada
+        function pasteSelection() {
+            // Si no hay datos en el portapapeles, no hacer nada
+            if (!clipboardData) {
+                updateStatus("No hay datos para pegar", true);
+                return;
+            }
+            
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
+            // Pegar filas
+            if (clipboardData.type === 'row') {
+                clipboardData.data.forEach(feature => {
+                    geoData.features.push(JSON.parse(JSON.stringify(feature)));
+                });
+                updateStatus(`${clipboardData.data.length} fila(s) pegada(s)`);
+            }
+            
+            // Pegar columnas
+            if (clipboardData.type === 'column') {
+                clipboardData.data.forEach(colData => {
+                    let colName = colData.name;
+                    
+                    // Si la columna ya existe, crear un nombre único
+                    if (currentColumns.includes(colName) && colName !== 'geometry') {
+                        let counter = 1;
+                        let newColName = `${colName}_copy`;
+                        while (currentColumns.includes(newColName)) {
+                            counter++;
+                            newColName = `${colName}_copy${counter}`;
+                        }
+                        colName = newColName;
+                    }
+                    
+                    // Si no es la columna geometry, agregarla a la lista
+                    if (colName !== 'geometry' || !currentColumns.includes('geometry')) {
+                        currentColumns.push(colName);
+                    }
+                    
+                    // Actualizar los datos
+                    colData.values.forEach((value, i) => {
+                        if (i < geoData.features.length) {
+                            if (colName === 'geometry') {
+                                geoData.features[i].geometry = value ? JSON.parse(JSON.stringify(value)) : null;
+                            } else {
+                                if (!geoData.features[i].properties) {
+                                    geoData.features[i].properties = {};
+                                }
+                                geoData.features[i].properties[colName] = value;
+                            }
+                        }
+                    });
+                });
+                updateStatus(`${clipboardData.data.length} columna(s) pegada(s)`);
+            }
+            
+            // Actualizar la visualización
+            rebuildSheet();
+        }
+        
+        // Función para alternar el modo wrap
+        function toggleWrapMode() {
             isWrapMode = !isWrapMode;
+            updateWrapButton();
             
             // Actualizar todas las celdas
             const cells = document.querySelectorAll('.sheet-table td');
@@ -970,11 +1329,10 @@
                 }
             });
             
-            updateWrapButton();
-            updateStatus(`Modo de ajuste de texto: ${isWrapMode ? 'Activado' : 'Desactivado'}`);
+            updateStatus(`Modo wrap ${isWrapMode ? 'activado' : 'desactivado'}`);
         }
-
-        // Función para actualizar el estado del botón de wrap
+        
+        // Función para actualizar el botón de wrap
         function updateWrapButton() {
             const wrapButton = document.getElementById('wrapButton');
             if (isWrapMode) {
@@ -983,410 +1341,139 @@
                 wrapButton.classList.remove('active');
             }
         }
-
-        function createEmptyFeature() {
-            // Usar coordenadas existentes si hay, o [0,0] por defecto
-            const coordinates = geoData.features.length > 0 && geoData.features[0].geometry?.coordinates
-                ? [...geoData.features[0].geometry.coordinates]
-                : [0, 0];
-            
-            return {
-                type: "Feature",
-                properties: {},
-                geometry: {
-                    type: "Point",
-                    coordinates: coordinates
-                }
-            };
-        }
-
-        // Función modificada para agregar columna sin solicitar nombre
-        function addColumn() {
-            // Guardar estado actual para Undo
-            saveToHistory();
-            
-            // Generar nombre de columna por defecto
-            const newColName = `Column${columnCounter++}`;
-            
-            if (!currentColumns.includes(newColName)) {
-                currentColumns.push(newColName);
-            }
-            
-            geoData.features.forEach(feature => {
-                if (!feature.properties) feature.properties = {};
-                if (!(newColName in feature.properties)) {
-                    feature.properties[newColName] = '';
-                }
-            });
-            
-            rebuildSheet();
-            updateStatus(`Columna agregada: ${newColName}`);
-        }
-
-        function addRow() {
-            // Guardar estado actual para Undo
-            saveToHistory();
-            
-            const newFeature = createEmptyFeature();
-            
-            // Copiar estructura de propiedades
-            if (geoData.features.length > 0 && geoData.features[0].properties) {
-                Object.keys(geoData.features[0].properties).forEach(key => {
-                    newFeature.properties[key] = '';
-                });
-            }
-            
-            geoData.features.push(newFeature);
-            rebuildSheet();
-            updateStatus(`Nueva fila agregada`);
-        }
-
-        // Nueva función para eliminar filas o columnas seleccionadas
-        function deleteSelected() {
-            // Verificar si hay algo seleccionado
-            if (selectedRows.size === 0 && selectedColumns.size === 0) {
-                updateStatus("No hay elementos seleccionados para eliminar", true);
-                return;
-            }
-            
-            // Guardar estado actual para Undo
-            saveToHistory();
-            
-            // Eliminar columnas seleccionadas
-            if (selectedColumns.size > 0) {
-                // Convertir a array y ordenar en orden descendente para eliminar desde el final
-                const columnsToDelete = Array.from(selectedColumns).sort((a, b) => b - a);
-                
-                columnsToDelete.forEach(colIndex => {
-                    const colName = currentColumns[colIndex];
-                    
-                    // No permitir eliminar la columna geometry
-                    if (colName === 'geometry') {
-                        updateStatus("No se puede eliminar la columna geometry", true);
-                        return;
-                    }
-                    
-                    // Eliminar la columna de los datos
-                    geoData.features.forEach(feature => {
-                        if (feature.properties && colName in feature.properties) {
-                            delete feature.properties[colName];
-                        }
-                    });
-                    
-                    // Eliminar la columna de la lista de columnas
-                    currentColumns.splice(colIndex, 1);
-                    
-                    // Eliminar el ancho personalizado si existe
-                    if (columnWidths[colIndex]) {
-                        delete columnWidths[colIndex];
-                    }
-                });
-                
-                updateStatus(`${columnsToDelete.length} columna(s) eliminada(s)`);
-            }
-            
-            // Eliminar filas seleccionadas
-            if (selectedRows.size > 0) {
-                // Convertir a array y ordenar en orden descendente para eliminar desde el final
-                const rowsToDelete = Array.from(selectedRows).sort((a, b) => b - a);
-                
-                rowsToDelete.forEach(rowIndex => {
-                    geoData.features.splice(rowIndex, 1);
-                });
-                
-                updateStatus(`${rowsToDelete.length} fila(s) eliminada(s)`);
-            }
-            
-            // Limpiar selecciones
-            selectedRows.clear();
-            selectedColumns.clear();
-            
-            rebuildSheet();
-        }
-
-        function saveFile() {
-            const dataStr = JSON.stringify(geoData, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'geodata_edited.geojson';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            updateStatus(`Archivo guardado como geodata_edited.geojson`);
-        }
-
-        function updateStatus(message, isError = false) {
-            const statusBar = document.getElementById('statusBar');
-            const titleStatus = document.getElementById('titleStatus');
-            
-            statusBar.textContent = message;
-            titleStatus.textContent = message;
-            
-            if (isError) {
-                statusBar.classList.add('error');
-                titleStatus.classList.add('error');
-            } else {
-                statusBar.classList.remove('error');
-                titleStatus.classList.remove('error');
-            }
-        }
-
-        // Funciones para selección de filas y columnas
-        function selectRow(rowIndex) {
-            if (selectedRows.has(rowIndex)) {
-                selectedRows.delete(rowIndex);
-            } else {
-                // Limpiar selección previa si no se está presionando Ctrl
-                if (!event.ctrlKey) {
-                    selectedRows.clear();
-                    selectedColumns.clear();
-                }
-                selectedRows.add(rowIndex);
-            }
-            rebuildSheet();
-            updateStatus(`Fila ${rowIndex + 1} seleccionada`);
-        }
-
-        function selectColumn(colIndex) {
-            if (selectedColumns.has(colIndex)) {
-                selectedColumns.delete(colIndex);
-            } else {
-                // Limpiar selección previa si no se está presionando Ctrl
-                if (!event.ctrlKey) {
-                    selectedRows.clear();
-                    selectedColumns.clear();
-                }
-                selectedColumns.add(colIndex);
-            }
-            rebuildSheet();
-            updateStatus(`Columna ${currentColumns[colIndex]} seleccionada`);
-        }
-
-        // Funciones para copiar y pegar
-        function copySelection() {
-            clipboard = {
-                rows: Array.from(selectedRows),
-                columns: Array.from(selectedColumns),
-                data: []
-            };
-            
-            // Copiar datos de filas seleccionadas
-            if (clipboard.rows.length > 0) {
-                clipboard.data = clipboard.rows.map(rowIndex => {
-                    const feature = geoData.features[rowIndex];
-                    return JSON.parse(JSON.stringify(feature)); // Deep copy
-                });
-                updateStatus(`${clipboard.rows.length} filas copiadas al portapapeles`);
-            }
-            // Copiar datos de columnas seleccionadas
-            else if (clipboard.columns.length > 0) {
-                clipboard.data = clipboard.columns.map(colIndex => {
-                    const colName = currentColumns[colIndex];
-                    const colData = {
-                        name: colName,
-                        values: []
-                    };
-                    
-                    geoData.features.forEach(feature => {
-                        if (colName === 'geometry') {
-                            colData.values.push(feature.geometry?.coordinates || [0, 0]);
-                        } else {
-                            colData.values.push(feature.properties?.[colName] || '');
-                        }
-                    });
-                    
-                    return colData;
-                });
-                updateStatus(`${clipboard.columns.length} columnas copiadas al portapapeles`);
-            }
-        }
-
-        function pasteSelection() {
-            if (!clipboard) {
-                updateStatus("No hay datos en el portapapeles", true);
-                return;
-            }
-            
-            // Guardar estado actual para Undo
-            saveToHistory();
-            
-            // Pegar filas
-            if (clipboard.data.length > 0 && clipboard.rows.length > 0) {
-                // Agregar nuevas filas con los datos copiados
-                clipboard.data.forEach(featureData => {
-                    geoData.features.push(JSON.parse(JSON.stringify(featureData))); // Deep copy
-                });
-                updateStatus(`${clipboard.data.length} filas pegadas`);
-                rebuildSheet();
-            }
-            // Pegar columnas
-            else if (clipboard.data.length > 0 && clipboard.columns.length > 0) {
-                clipboard.data.forEach(colData => {
-                    const colName = colData.name;
-                    let newColName = colName;
-                    
-                    // Si la columna ya existe, crear un nombre único
-                    if (currentColumns.includes(colName) && colName !== 'geometry') {
-                        newColName = `${colName}_copy`;
-                        let counter = 1;
-                        while (currentColumns.includes(newColName)) {
-                            newColName = `${colName}_copy${counter++}`;
-                        }
-                        currentColumns.push(newColName);
-                    }
-                    
-                    // Pegar valores en las filas existentes
-                    geoData.features.forEach((feature, i) => {
-                        if (i < colData.values.length) {
-                            if (newColName === 'geometry') {
-                                if (!feature.geometry) feature.geometry = { type: "Point" };
-                                feature.geometry.coordinates = colData.values[i];
-                            } else {
-                                if (!feature.properties) feature.properties = {};
-                                feature.properties[newColName] = colData.values[i];
-                            }
-                        }
-                    });
-                });
-                updateStatus(`${clipboard.data.length} columnas pegadas`);
-                rebuildSheet();
-            }
-        }
-
-        // Funciones para Undo/Redo
+        
+        // Función para guardar el estado actual en el historial de deshacer
         function saveToHistory() {
-            // Eliminar estados futuros si estamos en medio del historial
-            if (historyIndex < history.length - 1) {
-                history = history.slice(0, historyIndex + 1);
-            }
-            
-            // Guardar estado actual
-            const currentState = {
+            undoStack.push({
                 geoData: JSON.parse(JSON.stringify(geoData)),
                 currentColumns: [...currentColumns],
                 columnWidths: {...columnWidths},
-                isWrapMode: isWrapMode
-            };
-            
-            history.push(currentState);
+                selectedRows: new Set(selectedRows),
+                selectedColumns: new Set(selectedColumns)
+            });
             
             // Limitar el tamaño del historial
-            if (history.length > MAX_HISTORY) {
-                history.shift();
+            if (undoStack.length > maxUndoSteps) {
+                undoStack.shift();
             }
             
-            historyIndex = history.length - 1;
+            // Limpiar el historial de rehacer
+            redoStack = [];
+            
             updateUndoRedoButtons();
         }
-
+        
+        // Función para deshacer la última acción
         function undoAction() {
-            if (historyIndex <= 0) {
+            if (undoStack.length === 0) {
                 updateStatus("No hay acciones para deshacer", true);
                 return;
             }
             
-            historyIndex--;
-            const previousState = history[historyIndex];
+            // Guardar el estado actual para rehacer
+            redoStack.push({
+                geoData: JSON.parse(JSON.stringify(geoData)),
+                currentColumns: [...currentColumns],
+                columnWidths: {...columnWidths},
+                selectedRows: new Set(selectedRows),
+                selectedColumns: new Set(selectedColumns)
+            });
             
-            geoData = JSON.parse(JSON.stringify(previousState.geoData));
-            currentColumns = [...previousState.currentColumns];
-            columnWidths = {...previousState.columnWidths};
-            isWrapMode = previousState.isWrapMode;
+            // Restaurar el estado anterior
+            const prevState = undoStack.pop();
+            geoData = prevState.geoData;
+            currentColumns = prevState.currentColumns;
+            columnWidths = prevState.columnWidths;
+            selectedRows = prevState.selectedRows;
+            selectedColumns = prevState.selectedColumns;
             
+            // Actualizar la visualización
             rebuildSheet();
-            updateWrapButton();
-            updateStatus("Acción deshecha");
             updateUndoRedoButtons();
+            
+            updateStatus("Acción deshecha");
         }
-
+        
+        // Función para rehacer la última acción deshecha
         function redoAction() {
-            if (historyIndex >= history.length - 1) {
+            if (redoStack.length === 0) {
                 updateStatus("No hay acciones para rehacer", true);
                 return;
             }
             
-            historyIndex++;
-            const nextState = history[historyIndex];
+            // Guardar el estado actual para deshacer
+            undoStack.push({
+                geoData: JSON.parse(JSON.stringify(geoData)),
+                currentColumns: [...currentColumns],
+                columnWidths: {...columnWidths},
+                selectedRows: new Set(selectedRows),
+                selectedColumns: new Set(selectedColumns)
+            });
             
-            geoData = JSON.parse(JSON.stringify(nextState.geoData));
-            currentColumns = [...nextState.currentColumns];
-            columnWidths = {...nextState.columnWidths};
-            isWrapMode = nextState.isWrapMode;
+            // Restaurar el estado siguiente
+            const nextState = redoStack.pop();
+            geoData = nextState.geoData;
+            currentColumns = nextState.currentColumns;
+            columnWidths = nextState.columnWidths;
+            selectedRows = nextState.selectedRows;
+            selectedColumns = nextState.selectedColumns;
             
+            // Actualizar la visualización
             rebuildSheet();
-            updateWrapButton();
-            updateStatus("Acción rehecha");
             updateUndoRedoButtons();
+            
+            updateStatus("Acción rehecha");
         }
-
+        
+        // Función para actualizar los botones de deshacer/rehacer
         function updateUndoRedoButtons() {
             const undoButton = document.getElementById('undoButton');
             const redoButton = document.getElementById('redoButton');
             const undoOption = document.getElementById('undoOption');
             const redoOption = document.getElementById('redoOption');
             
-            // Actualizar botones de la barra de herramientas
-            if (historyIndex <= 0) {
+            if (undoStack.length === 0) {
                 undoButton.classList.add('disabled');
-                undoButton.title = "No hay acciones para deshacer";
+                undoOption.classList.add('disabled');
             } else {
                 undoButton.classList.remove('disabled');
-                undoButton.title = "Deshacer (Ctrl+Z)";
+                undoOption.classList.remove('disabled');
             }
             
-            if (historyIndex >= history.length - 1) {
+            if (redoStack.length === 0) {
                 redoButton.classList.add('disabled');
-                redoButton.title = "No hay acciones para rehacer";
+                redoOption.classList.add('disabled');
             } else {
                 redoButton.classList.remove('disabled');
-                redoButton.title = "Rehacer (Ctrl+Y)";
+                redoOption.classList.remove('disabled');
             }
-            
-            // Actualizar opciones del menú
-            undoOption.style.color = historyIndex <= 0 ? '#999' : '';
-            redoOption.style.color = historyIndex >= history.length - 1 ? '#999' : '';
         }
-
-        // Atajos de teclado
-        document.addEventListener('keydown', function(e) {
-            // Ctrl+Z para Undo
-            if (e.ctrlKey && e.key === 'z') {
-                e.preventDefault();
-                undoAction();
+        
+        // Función para guardar el archivo
+        function saveFile() {
+            // Crear un blob con los datos
+            const blob = new Blob([JSON.stringify(geoData, null, 2)], {type: 'application/json'});
+            
+            // Crear un enlace para descargar el archivo
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'geojson_export.geojson';
+            a.click();
+            
+            updateStatus("Archivo guardado como geojson_export.geojson");
+        }
+        
+        // Función para actualizar el estado
+        function updateStatus(message, isError = false) {
+            const statusBar = document.getElementById('statusBar');
+            statusBar.textContent = message;
+            
+            if (isError) {
+                statusBar.classList.add('error');
+            } else {
+                statusBar.classList.remove('error');
             }
-            
-            // Ctrl+Y para Redo
-            if (e.ctrlKey && e.key === 'y') {
-                e.preventDefault();
-                redoAction();
-            }
-            
-            // Delete para eliminar selección
-            if (e.key === 'Delete' && (selectedRows.size > 0 || selectedColumns.size > 0)) {
-                e.preventDefault();
-                deleteSelected();
-            }
-        });
-
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
-            // Guardar estado inicial para Undo
-            saveToHistory();
-            
-            // Cargar datos del archivo GALO-1.geojson al inicio
-            loadDataIntoSheet();
-            updateStatus('Archivo GALO-1.geojson cargado automáticamente');
-            
-            // Mostrar los datos en la consola para depuración
-            console.log("Datos cargados:", geoData);
-            console.log("Propiedades del primer feature:", geoData.features[0].properties);
-            console.log("Coordenadas del primer feature:", geoData.features[0].geometry.coordinates);
-        });
+        }
     </script>
 </body>
 </html>
