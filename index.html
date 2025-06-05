@@ -11,6 +11,7 @@
             padding: 0;
             background: #ffffff;
             color: #212121;
+            overflow: hidden; /* Evitar scroll en el body */
         }
         
         /* Barra de título estilo Excel */
@@ -85,134 +86,123 @@
         
         /* Contenedor principal de la hoja */
         .sheet-container {
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 70px);
+            height: calc(100vh - 110px);
             overflow: auto;
             background: white;
             position: relative;
         }
         
-        .sheet-header {
-            display: flex;
+        /* Estructura de tabla para la hoja */
+        .sheet-table {
+            border-collapse: collapse;
+            table-layout: fixed; /* Importante para el redimensionamiento */
+            width: 100%;
+        }
+        
+        .sheet-table th, .sheet-table td {
+            border: 1px solid #e0e0e0;
+            padding: 0;
+            box-sizing: border-box;
+            height: 22px;
+            font-size: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Encabezados de columna */
+        .sheet-table thead {
             position: sticky;
             top: 0;
             z-index: 10;
-        }
-        
-        .sheet-content {
-            display: flex;
-        }
-        
-        /* Esquina superior izquierda */
-        .corner-header {
-            width: 40px;
-            height: 22px;
             background: #f8f9fa;
-            border-right: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-            position: sticky;
+        }
+        
+        .sheet-table th {
+            background: #f8f9fa;
+            font-weight: normal;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            padding: 0 5px;
+        }
+        
+        .sheet-table th:hover {
+            background: #e9e9e9;
+        }
+        
+        .sheet-table th.column-selected {
+            background: #d3e3fd !important;
+        }
+        
+        /* Resizer para cambiar el ancho de las columnas */
+        .column-resizer {
+            position: absolute;
             top: 0;
-            left: 0;
-            z-index: 15;
+            right: -2px; /* Ajuste para que esté sobre el borde */
+            width: 5px;
+            height: 100%;
+            cursor: col-resize;
+            z-index: 20;
         }
         
         /* Números de fila */
-        .row-numbers {
+        .row-number-cell {
             position: sticky;
             left: 0;
             z-index: 5;
             background: #f8f9fa;
             width: 40px;
-        }
-        
-        .row-number {
-            height: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-right: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 12px;
+            min-width: 40px;
+            text-align: center;
             color: #444;
-            background: #f8f9fa;
             cursor: pointer;
             user-select: none;
         }
         
-        .row-number:hover {
+        .row-number-cell:hover {
             background: #e9e9e9;
         }
         
-        .row-selected {
+        .row-number-cell.row-selected {
             background: #d3e3fd !important;
         }
         
-        /* Encabezados de columna */
-        .column-headers {
-            display: flex;
+        /* Esquina superior izquierda */
+        .corner-header-cell {
             position: sticky;
             top: 0;
-            z-index: 10;
+            left: 0;
+            z-index: 15;
             background: #f8f9fa;
-            height: 22px;
+            width: 40px;
+            min-width: 40px;
         }
         
-        /* Columnas con ancho fijo y consistente */
-        .column-header, .sheet-cell {
-            width: 120px; /* Ancho fijo para todas las columnas */
-            min-width: 120px;
-            max-width: 120px;
-            height: 22px;
-            border-right: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 0;
-            box-sizing: border-box;
-            overflow: hidden;
-            position: relative;
+        /* Celdas de datos */
+        .sheet-table td {
+            height: auto; /* Altura automática para permitir ajuste de texto */
+            min-height: 22px; /* Altura mínima */
         }
         
-        .column-header {
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-            cursor: pointer;
-            user-select: none;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding: 0 5px;
-        }
-        
-        .column-header:hover {
-            background: #e9e9e9;
-        }
-        
-        .column-selected {
-            background: #d3e3fd !important;
-        }
-        
-        /* Filas y celdas */
-        .sheet-rows {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .sheet-row {
-            display: flex;
-            height: 22px;
-        }
-        
-        .sheet-row.selected {
+        .sheet-table tr.row-selected td {
             background-color: #d3e3fd;
         }
         
-        .sheet-cell.selected {
+        .sheet-table td.cell-selected {
             background-color: #d3e3fd;
         }
         
-        .sheet-cell input {
+        /* Modo wrap para las celdas */
+        .sheet-table td.wrap-mode input {
+            white-space: normal; /* Permite el ajuste de texto */
+            height: auto; /* Altura automática */
+            overflow: visible; /* Muestra todo el contenido */
+            word-break: break-word; /* Rompe palabras largas */
+        }
+        
+        .sheet-table td input {
             width: 100%;
             height: 100%;
             border: none;
@@ -222,11 +212,11 @@
             outline: none;
             background: transparent;
             text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: nowrap; /* Por defecto no hay wrap */
             overflow: hidden;
         }
         
-        .sheet-cell input:focus {
+        .sheet-table td input:focus {
             outline: 2px solid #217346;
             z-index: 2;
             position: relative;
@@ -238,7 +228,7 @@
         }
         
         /* Tooltip para mostrar el contenido completo */
-        .sheet-cell:hover::after {
+        .sheet-table td:hover::after {
             content: attr(data-tooltip);
             position: absolute;
             background: #f8f9fa;
@@ -254,8 +244,23 @@
             display: block;
         }
         
-        .sheet-cell:not([data-tooltip]):hover::after {
+        .sheet-table td:not([data-tooltip]):hover::after {
             display: none;
+        }
+        
+        /* Estilos para el editor de nombres de columnas */
+        .column-header-editor {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+            font-size: 12px;
+            text-align: center;
+            outline: 2px solid #217346;
+            z-index: 30;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
         
         /* Barra de estado */
@@ -273,15 +278,6 @@
         
         .error {
             color: #d83b01;
-        }
-        
-        /* Estilos para la selección */
-        .selection-overlay {
-            position: absolute;
-            background-color: rgba(0, 120, 215, 0.1);
-            border: 1px solid #0078d7;
-            pointer-events: none;
-            z-index: 1;
         }
         
         /* Estilos para los botones de la barra de herramientas */
@@ -323,6 +319,34 @@
             height: 16px;
             margin-right: 4px;
         }
+        
+        /* Estilos para el botón de ajuste de texto */
+        .toolbar-toggle {
+            padding: 4px 8px;
+            margin-right: 5px;
+            background: #f3f2f1;
+            border: 1px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        .toolbar-toggle.active {
+            background: #d3e3fd;
+            border: 1px solid #0078d7;
+        }
+        
+        .toolbar-toggle:hover {
+            background: #e6e6e6;
+            border: 1px solid #d4d4d4;
+        }
+        
+        .toolbar-toggle svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+        }
     </style>
 </head>
 <body>
@@ -354,6 +378,12 @@
                 <div class="menu-option" onclick="pasteSelection()">Paste</div>
             </div>
         </div>
+        <div class="menu-item" id="viewMenu">
+            View
+            <div class="menu-dropdown">
+                <div class="menu-option" onclick="toggleWrapMode()">Toggle Wrap Text</div>
+            </div>
+        </div>
     </div>
     
     <div class="toolbar">
@@ -371,17 +401,26 @@
             </svg>
             Redo
         </button>
+        <div class="toolbar-separator" style="width: 1px; height: 20px; background: #d4d4d4; margin: 0 10px;"></div>
+        <button class="toolbar-toggle" onclick="toggleWrapMode()" id="wrapButton" title="Toggle Wrap Text">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="17 7 17 13 7 13 7 7"></polyline>
+                <polyline points="7 17 17 17"></polyline>
+            </svg>
+            Wrap Text
+        </button>
     </div>
     
-    <div class="sheet-container">
-        <div class="sheet-header">
-            <div class="corner-header" id="cornerHeader"></div>
-            <div class="column-headers" id="columnHeaders"></div>
-        </div>
-        <div class="sheet-content">
-            <div class="row-numbers" id="rowNumbers"></div>
-            <div class="sheet-rows" id="sheetRows"></div>
-        </div>
+    <div class="sheet-container" id="sheetContainer">
+        <table class="sheet-table" id="sheetTable">
+            <thead>
+                <tr id="columnHeadersRow">
+                    <th class="corner-header-cell"></th>
+                </tr>
+            </thead>
+            <tbody id="sheetTableBody">
+            </tbody>
+        </table>
     </div>
     
     <div class="status-bar" id="statusBar">
@@ -443,6 +482,11 @@
         let clipboard = null;
         let columnCounter = 1;
         let activeMenu = null;
+        let isWrapMode = true; // Por defecto, el modo wrap está activado
+        let columnWidths = {}; // Almacena los anchos personalizados de las columnas
+        let startResizeX = 0; // Para el redimensionamiento de columnas
+        let currentResizeColumnIndex = null; // Índice de la columna que se está redimensionando
+        let initialColumnWidth = 0; // Ancho inicial de la columna que se está redimensionando
 
         // Mejorar el manejo de menús
         document.querySelectorAll('.menu-item').forEach(menuItem => {
@@ -572,70 +616,129 @@
             
             rebuildSheet();
             updateUndoRedoButtons();
+            updateWrapButton();
         }
 
+        // Función para reconstruir la tabla completa
         function rebuildSheet() {
-            const cornerHeader = document.getElementById('cornerHeader');
-            const columnHeaders = document.getElementById('columnHeaders');
-            const rowNumbers = document.getElementById('rowNumbers');
-            const sheetRows = document.getElementById('sheetRows');
+            const table = document.getElementById('sheetTable');
+            const headerRow = document.getElementById('columnHeadersRow');
+            const tableBody = document.getElementById('sheetTableBody');
             
-            // Limpiar
-            cornerHeader.innerHTML = '';
-            columnHeaders.innerHTML = '';
-            rowNumbers.innerHTML = '';
-            sheetRows.innerHTML = '';
+            // Limpiar tabla
+            headerRow.innerHTML = '<th class="corner-header-cell"></th>'; // Restaurar celda de esquina
+            tableBody.innerHTML = '';
             
-            // Crear encabezados
+            // Crear encabezados de columna
             currentColumns.forEach((col, colIndex) => {
-                const header = document.createElement('div');
-                header.className = 'column-header';
+                const th = document.createElement('th');
+                th.dataset.index = colIndex;
+                th.textContent = col;
+                th.title = col; // Tooltip
+                
+                // Aplicar ancho personalizado si existe
+                const colWidth = columnWidths[colIndex] || 120; // Ancho por defecto 120px
+                th.style.width = colWidth + 'px';
+                th.style.minWidth = colWidth + 'px';
+                th.style.maxWidth = colWidth + 'px';
+                
                 if (selectedColumns.has(colIndex)) {
-                    header.classList.add('column-selected');
+                    th.classList.add('column-selected');
                 }
-                header.textContent = col;
-                header.title = col; // Tooltip para mostrar el nombre completo
-                header.dataset.index = colIndex;
                 
                 // Evento para seleccionar columna
-                header.addEventListener('click', function() {
+                th.addEventListener('click', function() {
                     selectColumn(colIndex);
                 });
                 
-                columnHeaders.appendChild(header);
-            });
-            
-            // Crear filas
-            geoData.features.forEach((feature, rowIndex) => {
-                // Número de fila
-                const rowNumber = document.createElement('div');
-                rowNumber.className = 'row-number';
-                if (selectedRows.has(rowIndex)) {
-                    rowNumber.classList.add('row-selected');
-                }
-                rowNumber.textContent = rowIndex + 1;
-                rowNumber.dataset.index = rowIndex;
-                
-                // Evento para seleccionar fila
-                rowNumber.addEventListener('click', function() {
-                    selectRow(rowIndex);
+                // Evento para editar el nombre de la columna con doble clic
+                th.addEventListener('dblclick', function(e) {
+                    // No permitir editar la columna geometry
+                    if (col === 'geometry') {
+                        updateStatus("No se puede cambiar el nombre de la columna geometry", true);
+                        return;
+                    }
+                    
+                    // Crear un input para editar el nombre
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'column-header-editor';
+                    input.value = col;
+                    input.dataset.originalName = col;
+                    input.dataset.colIndex = colIndex;
+                    
+                    // Reemplazar el contenido del encabezado con el input
+                    th.textContent = '';
+                    th.appendChild(input);
+                    input.focus();
+                    input.select();
+                    
+                    // Manejar la finalización de la edición
+                    input.addEventListener('blur', finishColumnRename);
+                    input.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            input.blur();
+                        } else if (e.key === 'Escape') {
+                            e.preventDefault();
+                            input.value = input.dataset.originalName;
+                            input.blur();
+                        }
+                    });
+                    
+                    e.stopPropagation();
                 });
                 
-                rowNumbers.appendChild(rowNumber);
+                // Agregar resizer para cambiar el ancho de la columna
+                const resizer = document.createElement('div');
+                resizer.className = 'column-resizer';
+                resizer.dataset.colIndex = colIndex;
+                resizer.addEventListener('mousedown', startColumnResize);
+                th.appendChild(resizer);
                 
-                // Fila de datos
-                const row = document.createElement('div');
-                row.className = 'sheet-row';
+                headerRow.appendChild(th);
+            });
+            
+            // Crear filas de datos
+            geoData.features.forEach((feature, rowIndex) => {
+                const tr = document.createElement('tr');
                 if (selectedRows.has(rowIndex)) {
-                    row.classList.add('selected');
+                    tr.classList.add('row-selected');
                 }
                 
+                // Celda de número de fila
+                const rowNumTd = document.createElement('td');
+                rowNumTd.className = 'row-number-cell';
+                if (selectedRows.has(rowIndex)) {
+                    rowNumTd.classList.add('row-selected');
+                }
+                rowNumTd.textContent = rowIndex + 1;
+                rowNumTd.dataset.index = rowIndex;
+                rowNumTd.addEventListener('click', function() {
+                    selectRow(rowIndex);
+                });
+                tr.appendChild(rowNumTd);
+                
+                // Celdas de datos
                 currentColumns.forEach((col, colIndex) => {
-                    const cell = document.createElement('div');
-                    cell.className = 'sheet-cell';
-                    if (col === 'geometry') cell.classList.add('coords-cell');
+                    const td = document.createElement('td');
+                    td.dataset.row = rowIndex;
+                    td.dataset.col = colIndex;
+                    
+                    // Aplicar ancho personalizado si existe
+                    const colWidth = columnWidths[colIndex] || 120;
+                    td.style.width = colWidth + 'px';
+                    td.style.minWidth = colWidth + 'px';
+                    td.style.maxWidth = colWidth + 'px';
+                    
+                    if (col === 'geometry') td.classList.add('coords-cell');
                     if (selectedColumns.has(colIndex)) {
-                        cell.classList.add('selected');
+                        td.classList.add('cell-selected');
+                    }
+                    
+                    // Aplicar modo wrap si está activado
+                    if (isWrapMode) {
+                        td.classList.add('wrap-mode');
                     }
                     
                     const input = document.createElement('input');
@@ -676,8 +779,8 @@
                         input.value = value;
                         
                         // Agregar tooltip para valores largos
-                        if (value.length > 15) {
-                            cell.setAttribute('data-tooltip', value);
+                        if (String(value).length > 15) {
+                            td.setAttribute('data-tooltip', value);
                         }
                         
                         input.addEventListener('change', function(e) {
@@ -688,24 +791,197 @@
                             feature.properties[col] = e.target.value;
                             
                             // Actualizar tooltip
-                            if (e.target.value.length > 15) {
-                                cell.setAttribute('data-tooltip', e.target.value);
+                            if (String(e.target.value).length > 15) {
+                                td.setAttribute('data-tooltip', e.target.value);
                             } else {
-                                cell.removeAttribute('data-tooltip');
+                                td.removeAttribute('data-tooltip');
                             }
                             
                             updateStatus(`Propiedad ${col} actualizada en fila ${rowIndex + 1}`);
                         });
                     }
                     
-                    cell.appendChild(input);
-                    row.appendChild(cell);
+                    td.appendChild(input);
+                    tr.appendChild(td);
                 });
                 
-                sheetRows.appendChild(row);
+                tableBody.appendChild(tr);
             });
             
             updateStatus(`Datos cargados: ${geoData.features.length} registros`);
+        }
+
+        // Función para iniciar el redimensionamiento de columnas
+        function startColumnResize(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            currentResizeColumnIndex = parseInt(this.dataset.colIndex);
+            startResizeX = e.clientX;
+            
+            // Obtener el ancho actual de la columna
+            const header = document.querySelector(`th[data-index="${currentResizeColumnIndex}"]`);
+            initialColumnWidth = header.offsetWidth;
+            
+            // Agregar eventos para el arrastre
+            document.addEventListener('mousemove', doColumnResize);
+            document.addEventListener('mouseup', endColumnResize);
+            
+            // Cambiar el cursor durante el redimensionamiento
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        }
+
+        // Función para realizar el redimensionamiento durante el arrastre
+        function doColumnResize(e) {
+            if (currentResizeColumnIndex === null) return;
+            
+            const diff = e.clientX - startResizeX;
+            const newWidth = Math.max(60, initialColumnWidth + diff); // Mínimo 60px
+            
+            // Actualizar el ancho de la columna en el objeto
+            columnWidths[currentResizeColumnIndex] = newWidth;
+            
+            // Actualizar el ancho del encabezado y todas las celdas de la columna
+            const header = document.querySelector(`th[data-index="${currentResizeColumnIndex}"]`);
+            const cells = document.querySelectorAll(`td[data-col="${currentResizeColumnIndex}"]`);
+            
+            if (header) {
+                header.style.width = newWidth + 'px';
+                header.style.minWidth = newWidth + 'px';
+                header.style.maxWidth = newWidth + 'px';
+            }
+            
+            cells.forEach(cell => {
+                cell.style.width = newWidth + 'px';
+                cell.style.minWidth = newWidth + 'px';
+                cell.style.maxWidth = newWidth + 'px';
+            });
+        }
+
+        // Función para finalizar el redimensionamiento
+        function endColumnResize() {
+            currentResizeColumnIndex = null;
+            document.removeEventListener('mousemove', doColumnResize);
+            document.removeEventListener('mouseup', endColumnResize);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            
+            // Guardar estado para Undo
+            saveToHistory();
+        }
+
+        // Función para ajustar automáticamente el ancho de una columna con doble clic
+        function autoFitColumn(colIndex) {
+            // Implementar la lógica para ajustar automáticamente el ancho de la columna
+            // basado en el contenido más largo
+            let maxWidth = 100; // Ancho mínimo
+            
+            // Obtener el ancho necesario para el encabezado
+            const colName = currentColumns[colIndex];
+            const headerWidth = colName.length * 8 + 20; // Estimación aproximada
+            maxWidth = Math.max(maxWidth, headerWidth);
+            
+            // Obtener el ancho necesario para los datos
+            geoData.features.forEach(feature => {
+                let value = '';
+                if (colName === 'geometry' && feature.geometry) {
+                    value = feature.geometry.coordinates.join(', ');
+                } else if (feature.properties && colName in feature.properties) {
+                    value = String(feature.properties[colName]);
+                }
+                
+                const valueWidth = value.length * 8 + 20; // Estimación aproximada
+                maxWidth = Math.max(maxWidth, valueWidth);
+            });
+            
+            // Limitar el ancho máximo
+            maxWidth = Math.min(maxWidth, 300);
+            
+            // Actualizar el ancho de la columna
+            columnWidths[colIndex] = maxWidth;
+            
+            // Reconstruir la hoja para aplicar el nuevo ancho
+            rebuildSheet();
+        }
+
+        // Función para finalizar la edición del nombre de una columna
+        function finishColumnRename() {
+            const input = this;
+            const newName = input.value.trim();
+            const originalName = input.dataset.originalName;
+            const colIndex = parseInt(input.dataset.colIndex);
+            
+            // Validar que el nombre no esté vacío
+            if (!newName) {
+                updateStatus("El nombre de la columna no puede estar vacío", true);
+                input.parentNode.textContent = originalName;
+                return;
+            }
+            
+            // Validar que el nombre no exista ya
+            if (newName !== originalName && currentColumns.includes(newName)) {
+                updateStatus(`Ya existe una columna con el nombre "${newName}"`, true);
+                input.parentNode.textContent = originalName;
+                return;
+            }
+            
+            // Si el nombre no ha cambiado, simplemente restaurar el encabezado
+            if (newName === originalName) {
+                input.parentNode.textContent = originalName;
+                return;
+            }
+            
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
+            // Actualizar el nombre de la columna en la lista de columnas
+            currentColumns[colIndex] = newName;
+            
+            // Actualizar los datos
+            geoData.features.forEach(feature => {
+                if (feature.properties && originalName in feature.properties) {
+                    // Copiar el valor a la nueva propiedad
+                    feature.properties[newName] = feature.properties[originalName];
+                    // Eliminar la propiedad original
+                    delete feature.properties[originalName];
+                }
+            });
+            
+            // Reconstruir la hoja
+            rebuildSheet();
+            updateStatus(`Columna renombrada: ${originalName} → ${newName}`);
+        }
+
+        // Función para alternar el modo wrap
+        function toggleWrapMode() {
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
+            isWrapMode = !isWrapMode;
+            
+            // Actualizar todas las celdas
+            const cells = document.querySelectorAll('.sheet-table td');
+            cells.forEach(cell => {
+                if (isWrapMode) {
+                    cell.classList.add('wrap-mode');
+                } else {
+                    cell.classList.remove('wrap-mode');
+                }
+            });
+            
+            updateWrapButton();
+            updateStatus(`Modo de ajuste de texto: ${isWrapMode ? 'Activado' : 'Desactivado'}`);
+        }
+
+        // Función para actualizar el estado del botón de wrap
+        function updateWrapButton() {
+            const wrapButton = document.getElementById('wrapButton');
+            if (isWrapMode) {
+                wrapButton.classList.add('active');
+            } else {
+                wrapButton.classList.remove('active');
+            }
         }
 
         function createEmptyFeature() {
@@ -799,6 +1075,11 @@
                     
                     // Eliminar la columna de la lista de columnas
                     currentColumns.splice(colIndex, 1);
+                    
+                    // Eliminar el ancho personalizado si existe
+                    if (columnWidths[colIndex]) {
+                        delete columnWidths[colIndex];
+                    }
                 });
                 
                 updateStatus(`${columnsToDelete.length} columna(s) eliminada(s)`);
@@ -987,7 +1268,9 @@
             // Guardar estado actual
             const currentState = {
                 geoData: JSON.parse(JSON.stringify(geoData)),
-                currentColumns: [...currentColumns]
+                currentColumns: [...currentColumns],
+                columnWidths: {...columnWidths},
+                isWrapMode: isWrapMode
             };
             
             history.push(currentState);
@@ -1012,8 +1295,11 @@
             
             geoData = JSON.parse(JSON.stringify(previousState.geoData));
             currentColumns = [...previousState.currentColumns];
+            columnWidths = {...previousState.columnWidths};
+            isWrapMode = previousState.isWrapMode;
             
             rebuildSheet();
+            updateWrapButton();
             updateStatus("Acción deshecha");
             updateUndoRedoButtons();
         }
@@ -1029,8 +1315,11 @@
             
             geoData = JSON.parse(JSON.stringify(nextState.geoData));
             currentColumns = [...nextState.currentColumns];
+            columnWidths = {...nextState.columnWidths};
+            isWrapMode = nextState.isWrapMode;
             
             rebuildSheet();
+            updateWrapButton();
             updateStatus("Acción rehecha");
             updateUndoRedoButtons();
         }
