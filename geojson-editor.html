@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor GeoJSON</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        #menu {
+            background: #f0f0f0;
+            padding: 10px;
+        }
+        #menu button {
+            margin-right: 5px;
+        }
+        #spreadsheet {
+            overflow-x: auto;
+            margin: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
+        .coords {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <button onclick="document.getElementById('fileInput').click()">Abrir GeoJSON</button>
+        <button onclick="saveFile()">Guardar GeoJSON</button>
+        <button onclick="addColumn()">Agregar Columna</button>
+        <button onclick="addRow()">Agregar Fila</button>
+        <input type="file" id="fileInput" style="display: none;" accept=".geojson,.json">
+    </div>
+    
+    <div id="spreadsheet">
+        <table id="dataTable">
+            <thead>
+                <tr id="headerRow"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let geoData = {
+            type: "FeatureCollection",
+            features: []
+        };
+        let currentColumns = [];
+
+        // Cargar archivo
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    geoData = JSON.parse(e.target.result);
+                    loadDataIntoTable();
+                } catch (error) {
+                    alert("Error al leer el archivo: " + error.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Cargar datos en la tabla
+        function loadDataIntoTable() {
+            if (!geoData.features || geoData.features.length === 0) {
+                alert("El GeoJSON no contiene features");
+                return;
+            }
+
+            const headerRow = document.getElementById('headerRow');
+            const tableBody = document.getElementById('tableBody');
+            
+            // Limpiar tabla
+            headerRow.innerHTML = '';
+            tableBody.innerHTML = '';
+            
+            // Obtener todas las columnas únicas
+            currentColumns = ['geometry'];
+            geoData.features.forEach(feature => {
+                Object.keys(feature.properties).forEach(key => {
+                    if (!currentColumns.includes(key)) {
+                        currentColumns.push(key);
+                    }
+                });
+            });
+
+            // Crear encabezados
+            currentColumns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                headerRow.appendChild(th);
+            });
+
+            // Llenar datos
+            geoData.features.forEach((feature, rowIndex) => {
+                const tr = document.createElement('tr');
+                
+                currentColumns.forEach(col => {
+                    const td = document.createElement('td');
+                    
+                    if (col === 'geometry') {
+                        td.className = 'coords';
+                        td.textContent = `[${feature.geometry.coordinates.join(', ')}]`;
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = typeof feature.properties[col] === 'number' ? 'number' : 'text';
+                        input.value = feature.properties[col] || '';
+                        input.dataset.column = col;
+                        input.dataset.row = rowIndex;
+                        input.addEventListener('change', updateData);
+                        td.appendChild(input);
+                    }
+                    
+                    tr.appendChild(td);
+                });
+                
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Actualizar datos cuando se edita una celda
+        function updateData(e) {
+            const row = parseInt(e.target.dataset.row);
+            const col = e.target.dataset.column;
+            const value = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
+            
+            geoData.features[row].properties[col] = value;
+        }
+
+        // Agregar nueva columna
+        function addColumn() {
+            const colName = prompt("Nombre de la nueva columna:");
+            if (!colName) return;
+            
+            const colType = prompt("Tipo de dato (text/number):", "text");
+            
+            // Agregar a la lista de columnas
+            if (!currentColumns.includes(colName)) {
+                currentColumns.push(colName);
+            }
+            
+            // Agregar propiedad a todos los features
+            geoData.features.forEach(feature => {
+                if (!feature.properties[colName]) {
+                    feature.properties[colName] = colType === 'number' ? 0 : '';
+                }
+            });
+            
+            loadDataIntoTable();
+        }
+
+        // Agregar nueva fila
+        function addRow() {
+            const newFeature = {
+                type: "Feature",
+                properties: {},
+                geometry: {
+                    type: "Point",
+                    coordinates: [0, 0] // Coordenadas por defecto
+                }
+            };
+            
+            // Copiar estructura de propiedades del primer feature
+            if (geoData.features.length > 0) {
+                Object.keys(geoData.features[0].properties).forEach(key => {
+                    newFeature.properties[key] = '';
+                });
+            }
+            
+            geoData.features.push(newFeature);
+            loadDataIntoTable();
+        }
+
+        // Guardar archivo
+        function saveFile() {
+            const dataStr = JSON.stringify(geoData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportName = 'edited_data.geojson';
+            
+            const link = document.createElement('a');
+            link.setAttribute('href', dataUri);
+            link.setAttribute('download', exportName);
+            link.click();
+        }
+    </script>
+</body>
+</html>
