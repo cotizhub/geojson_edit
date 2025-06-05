@@ -76,6 +76,13 @@
             background: #e5f3ff;
         }
         
+        /* Separador de menú */
+        .menu-separator {
+            height: 1px;
+            background-color: #d4d4d4;
+            margin: 4px 0;
+        }
+        
         /* Contenedor principal de la hoja */
         .sheet-container {
             display: flex;
@@ -151,12 +158,21 @@
             height: 22px;
         }
         
-        .column-header {
-            min-width: 100px;
+        /* Columnas con ancho fijo y consistente */
+        .column-header, .sheet-cell {
+            width: 120px; /* Ancho fijo para todas las columnas */
+            min-width: 120px;
+            max-width: 120px;
             height: 22px;
             border-right: 1px solid #e0e0e0;
             border-bottom: 1px solid #e0e0e0;
-            padding: 0 5px;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .column-header {
             font-size: 12px;
             display: flex;
             align-items: center;
@@ -164,6 +180,9 @@
             background: #f8f9fa;
             cursor: pointer;
             user-select: none;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 5px;
         }
         
         .column-header:hover {
@@ -189,15 +208,6 @@
             background-color: #d3e3fd;
         }
         
-        .sheet-cell {
-            min-width: 100px;
-            height: 22px;
-            border-right: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 0;
-            position: relative;
-        }
-        
         .sheet-cell.selected {
             background-color: #d3e3fd;
         }
@@ -211,6 +221,9 @@
             font-size: 12px;
             outline: none;
             background: transparent;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
         }
         
         .sheet-cell input:focus {
@@ -222,6 +235,27 @@
         .coords-cell input {
             font-family: monospace;
             color: #0066cc;
+        }
+        
+        /* Tooltip para mostrar el contenido completo */
+        .sheet-cell:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            background: #f8f9fa;
+            border: 1px solid #d4d4d4;
+            padding: 5px;
+            border-radius: 3px;
+            z-index: 20;
+            top: 100%;
+            left: 0;
+            white-space: normal;
+            max-width: 300px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: block;
+        }
+        
+        .sheet-cell:not([data-tooltip]):hover::after {
+            display: none;
         }
         
         /* Barra de estado */
@@ -249,6 +283,46 @@
             pointer-events: none;
             z-index: 1;
         }
+        
+        /* Estilos para los botones de la barra de herramientas */
+        .toolbar {
+            display: flex;
+            background: #f3f2f1;
+            padding: 4px 10px;
+            border-bottom: 1px solid #d4d4d4;
+        }
+        
+        .toolbar-button {
+            padding: 4px 8px;
+            margin-right: 5px;
+            background: #f3f2f1;
+            border: 1px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        .toolbar-button:hover {
+            background: #e6e6e6;
+            border: 1px solid #d4d4d4;
+        }
+        
+        .toolbar-button.disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+        
+        .toolbar-button.disabled:hover {
+            background: #f3f2f1;
+            border: 1px solid transparent;
+        }
+        
+        .toolbar-button svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+        }
     </style>
 </head>
 <body>
@@ -268,12 +342,35 @@
         <div class="menu-item" id="editMenu">
             Edit
             <div class="menu-dropdown">
+                <div class="menu-option" onclick="undoAction()" id="undoOption">Undo</div>
+                <div class="menu-option" onclick="redoAction()" id="redoOption">Redo</div>
+                <div class="menu-separator"></div>
                 <div class="menu-option" onclick="addColumn()">Add Column</div>
                 <div class="menu-option" onclick="addRow()">Add Row</div>
+                <div class="menu-separator"></div>
+                <div class="menu-option" onclick="deleteSelected()" id="deleteOption">Delete</div>
+                <div class="menu-separator"></div>
                 <div class="menu-option" onclick="copySelection()">Copy</div>
                 <div class="menu-option" onclick="pasteSelection()">Paste</div>
             </div>
         </div>
+    </div>
+    
+    <div class="toolbar">
+        <button class="toolbar-button" onclick="undoAction()" id="undoButton" title="Undo (Ctrl+Z)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7v6h6"></path>
+                <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+            </svg>
+            Undo
+        </button>
+        <button class="toolbar-button" onclick="redoAction()" id="redoButton" title="Redo (Ctrl+Y)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 7v6h-6"></path>
+                <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
+            </svg>
+            Redo
+        </button>
     </div>
     
     <div class="sheet-container">
@@ -334,6 +431,11 @@
             }
           ]
         };
+        
+        // Variables para el historial de acciones (Undo/Redo)
+        let history = [];
+        let historyIndex = -1;
+        const MAX_HISTORY = 50;
         
         let currentColumns = [];
         let selectedRows = new Set();
@@ -412,6 +514,9 @@
                         throw new Error("El campo 'features' debe ser un array");
                     }
                     
+                    // Guardar estado actual para Undo
+                    saveToHistory();
+                    
                     geoData = parsedData;
                     updateStatus(`Archivo cargado: ${file.name}`);
                     loadDataIntoSheet();
@@ -466,6 +571,7 @@
             selectedColumns.clear();
             
             rebuildSheet();
+            updateUndoRedoButtons();
         }
 
         function rebuildSheet() {
@@ -488,6 +594,7 @@
                     header.classList.add('column-selected');
                 }
                 header.textContent = col;
+                header.title = col; // Tooltip para mostrar el nombre completo
                 header.dataset.index = colIndex;
                 
                 // Evento para seleccionar columna
@@ -546,6 +653,9 @@
                         
                         input.addEventListener('change', function(e) {
                             try {
+                                // Guardar estado actual para Undo
+                                saveToHistory();
+                                
                                 const coords = e.target.value.split(',').map(Number);
                                 if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
                                     if (!feature.geometry) feature.geometry = { type: "Point" };
@@ -562,11 +672,28 @@
                     } 
                     // Manejar propiedades
                     else {
-                        input.value = feature.properties?.[col] || '';
+                        const value = feature.properties?.[col] || '';
+                        input.value = value;
+                        
+                        // Agregar tooltip para valores largos
+                        if (value.length > 15) {
+                            cell.setAttribute('data-tooltip', value);
+                        }
                         
                         input.addEventListener('change', function(e) {
+                            // Guardar estado actual para Undo
+                            saveToHistory();
+                            
                             if (!feature.properties) feature.properties = {};
                             feature.properties[col] = e.target.value;
+                            
+                            // Actualizar tooltip
+                            if (e.target.value.length > 15) {
+                                cell.setAttribute('data-tooltip', e.target.value);
+                            } else {
+                                cell.removeAttribute('data-tooltip');
+                            }
+                            
                             updateStatus(`Propiedad ${col} actualizada en fila ${rowIndex + 1}`);
                         });
                     }
@@ -599,6 +726,9 @@
 
         // Función modificada para agregar columna sin solicitar nombre
         function addColumn() {
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
             // Generar nombre de columna por defecto
             const newColName = `Column${columnCounter++}`;
             
@@ -618,6 +748,9 @@
         }
 
         function addRow() {
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
             const newFeature = createEmptyFeature();
             
             // Copiar estructura de propiedades
@@ -630,6 +763,64 @@
             geoData.features.push(newFeature);
             rebuildSheet();
             updateStatus(`Nueva fila agregada`);
+        }
+
+        // Nueva función para eliminar filas o columnas seleccionadas
+        function deleteSelected() {
+            // Verificar si hay algo seleccionado
+            if (selectedRows.size === 0 && selectedColumns.size === 0) {
+                updateStatus("No hay elementos seleccionados para eliminar", true);
+                return;
+            }
+            
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
+            // Eliminar columnas seleccionadas
+            if (selectedColumns.size > 0) {
+                // Convertir a array y ordenar en orden descendente para eliminar desde el final
+                const columnsToDelete = Array.from(selectedColumns).sort((a, b) => b - a);
+                
+                columnsToDelete.forEach(colIndex => {
+                    const colName = currentColumns[colIndex];
+                    
+                    // No permitir eliminar la columna geometry
+                    if (colName === 'geometry') {
+                        updateStatus("No se puede eliminar la columna geometry", true);
+                        return;
+                    }
+                    
+                    // Eliminar la columna de los datos
+                    geoData.features.forEach(feature => {
+                        if (feature.properties && colName in feature.properties) {
+                            delete feature.properties[colName];
+                        }
+                    });
+                    
+                    // Eliminar la columna de la lista de columnas
+                    currentColumns.splice(colIndex, 1);
+                });
+                
+                updateStatus(`${columnsToDelete.length} columna(s) eliminada(s)`);
+            }
+            
+            // Eliminar filas seleccionadas
+            if (selectedRows.size > 0) {
+                // Convertir a array y ordenar en orden descendente para eliminar desde el final
+                const rowsToDelete = Array.from(selectedRows).sort((a, b) => b - a);
+                
+                rowsToDelete.forEach(rowIndex => {
+                    geoData.features.splice(rowIndex, 1);
+                });
+                
+                updateStatus(`${rowsToDelete.length} fila(s) eliminada(s)`);
+            }
+            
+            // Limpiar selecciones
+            selectedRows.clear();
+            selectedColumns.clear();
+            
+            rebuildSheet();
         }
 
         function saveFile() {
@@ -740,6 +931,9 @@
                 return;
             }
             
+            // Guardar estado actual para Undo
+            saveToHistory();
+            
             // Pegar filas
             if (clipboard.data.length > 0 && clipboard.rows.length > 0) {
                 // Agregar nuevas filas con los datos copiados
@@ -783,8 +977,118 @@
             }
         }
 
+        // Funciones para Undo/Redo
+        function saveToHistory() {
+            // Eliminar estados futuros si estamos en medio del historial
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+            
+            // Guardar estado actual
+            const currentState = {
+                geoData: JSON.parse(JSON.stringify(geoData)),
+                currentColumns: [...currentColumns]
+            };
+            
+            history.push(currentState);
+            
+            // Limitar el tamaño del historial
+            if (history.length > MAX_HISTORY) {
+                history.shift();
+            }
+            
+            historyIndex = history.length - 1;
+            updateUndoRedoButtons();
+        }
+
+        function undoAction() {
+            if (historyIndex <= 0) {
+                updateStatus("No hay acciones para deshacer", true);
+                return;
+            }
+            
+            historyIndex--;
+            const previousState = history[historyIndex];
+            
+            geoData = JSON.parse(JSON.stringify(previousState.geoData));
+            currentColumns = [...previousState.currentColumns];
+            
+            rebuildSheet();
+            updateStatus("Acción deshecha");
+            updateUndoRedoButtons();
+        }
+
+        function redoAction() {
+            if (historyIndex >= history.length - 1) {
+                updateStatus("No hay acciones para rehacer", true);
+                return;
+            }
+            
+            historyIndex++;
+            const nextState = history[historyIndex];
+            
+            geoData = JSON.parse(JSON.stringify(nextState.geoData));
+            currentColumns = [...nextState.currentColumns];
+            
+            rebuildSheet();
+            updateStatus("Acción rehecha");
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            const undoButton = document.getElementById('undoButton');
+            const redoButton = document.getElementById('redoButton');
+            const undoOption = document.getElementById('undoOption');
+            const redoOption = document.getElementById('redoOption');
+            
+            // Actualizar botones de la barra de herramientas
+            if (historyIndex <= 0) {
+                undoButton.classList.add('disabled');
+                undoButton.title = "No hay acciones para deshacer";
+            } else {
+                undoButton.classList.remove('disabled');
+                undoButton.title = "Deshacer (Ctrl+Z)";
+            }
+            
+            if (historyIndex >= history.length - 1) {
+                redoButton.classList.add('disabled');
+                redoButton.title = "No hay acciones para rehacer";
+            } else {
+                redoButton.classList.remove('disabled');
+                redoButton.title = "Rehacer (Ctrl+Y)";
+            }
+            
+            // Actualizar opciones del menú
+            undoOption.style.color = historyIndex <= 0 ? '#999' : '';
+            redoOption.style.color = historyIndex >= history.length - 1 ? '#999' : '';
+        }
+
+        // Atajos de teclado
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+Z para Undo
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                undoAction();
+            }
+            
+            // Ctrl+Y para Redo
+            if (e.ctrlKey && e.key === 'y') {
+                e.preventDefault();
+                redoAction();
+            }
+            
+            // Delete para eliminar selección
+            if (e.key === 'Delete' && (selectedRows.size > 0 || selectedColumns.size > 0)) {
+                e.preventDefault();
+                deleteSelected();
+            }
+        });
+
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
+            // Guardar estado inicial para Undo
+            saveToHistory();
+            
             // Cargar datos del archivo GALO-1.geojson al inicio
             loadDataIntoSheet();
             updateStatus('Archivo GALO-1.geojson cargado automáticamente');
