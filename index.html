@@ -1,44 +1,450 @@
-// 1. Verifica que el archivo GeoJSON tenga la estructura correcta:
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "pozo": "GALO-1",
-        "campo": "TLACOLULA"
-        // ... otras propiedades
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [-97.9602415, 21.02323612]
-      }
-    }
-    // ... más features
-  ]
-}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoJSON Editor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f3f3f3;
+        }
+        
+        .title-bar {
+            background: #0078d7;
+            color: white;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        
+        .menu-bar {
+            background: #f3f3f3;
+            display: flex;
+            padding: 0;
+            border-bottom: 1px solid #d4d4d4;
+        }
+        
+        .menu-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            position: relative;
+            font-size: 13px;
+        }
+        
+        .menu-item:hover {
+            background: #e5e5e5;
+        }
+        
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #d4d4d4;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            z-index: 100;
+            min-width: 180px;
+        }
+        
+        .menu-item:hover .menu-dropdown {
+            display: block;
+        }
+        
+        .menu-option {
+            padding: 6px 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+        
+        .menu-option:hover {
+            background: #e5f3ff;
+        }
+        
+        .sheet-container {
+            display: flex;
+            height: calc(100vh - 60px);
+            overflow: auto;
+            background: white;
+        }
+        
+        .row-numbers {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background: #f8f8f8;
+        }
+        
+        .row-number {
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #555;
+            background: #f8f8f8;
+        }
+        
+        .column-headers {
+            display: flex;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8f8f8;
+        }
+        
+        .column-header {
+            min-width: 120px;
+            height: 24px;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 5px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sheet-rows {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sheet-row {
+            display: flex;
+        }
+        
+        .sheet-cell {
+            min-width: 120px;
+            height: 24px;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0;
+        }
+        
+        .sheet-cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            padding: 0 5px;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+        }
+        
+        .coords-cell input {
+            font-family: monospace;
+            color: #0066cc;
+        }
+        
+        .status-bar {
+            background: #eaeaea;
+            padding: 4px 10px;
+            font-size: 12px;
+            color: #555;
+            border-top: 1px solid #ddd;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <span>GeoJSON Editor</span>
+        <span id="titleStatus">Ready</span>
+    </div>
+    
+    <div class="menu-bar">
+        <div class="menu-item">
+            File
+            <div class="menu-dropdown">
+                <div class="menu-option" onclick="document.getElementById('fileInput').click()">Open</div>
+                <div class="menu-option" onclick="saveFile()">Save</div>
+            </div>
+        </div>
+        <div class="menu-item">
+            Edit
+            <div class="menu-dropdown">
+                <div class="menu-option" onclick="addColumn()">Add Column</div>
+                <div class="menu-option" onclick="addRow()">Add Row</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="sheet-container">
+        <div class="row-numbers" id="rowNumbers"></div>
+        <div>
+            <div class="column-headers" id="columnHeaders"></div>
+            <div class="sheet-rows" id="sheetRows"></div>
+        </div>
+    </div>
+    
+    <div class="status-bar" id="statusBar">
+        Ready
+    </div>
+    
+    <input type="file" id="fileInput" style="display: none;" accept=".geojson,.json">
 
-// 2. Prueba con este archivo de ejemplo si tienes problemas:
-const testGeoJSON = {
-  type: "FeatureCollection",
-  features: [
-    {
-      type: "Feature",
-      properties: {
-        pozo: "TEST-1",
-        campo: "TEST FIELD"
-      },
-      geometry: {
-        type: "Point",
-        coordinates: [-99.123456, 19.654321]
-      }
-    }
-  ]
-};
+    <script>
+        let geoData = {
+            type: "FeatureCollection",
+            features: []
+        };
+        let currentColumns = [];
 
-// 3. Para debuggear, agrega esto después de leer el archivo:
-console.log("Archivo cargado:", geoData);
-if (!geoData.features) console.error("No hay 'features' en el GeoJSON");
-if (geoData.features && geoData.features.length > 0) {
-  console.log("Primer feature:", geoData.features[0]);
-}
+        // Función mejorada para cargar archivos
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    
+                    // Validación básica del GeoJSON
+                    if (!parsedData.type || parsedData.type !== "FeatureCollection") {
+                        throw new Error("El archivo no es un FeatureCollection GeoJSON válido");
+                    }
+                    
+                    if (!Array.isArray(parsedData.features)) {
+                        throw new Error("El campo 'features' debe ser un array");
+                    }
+                    
+                    geoData = parsedData;
+                    updateStatus(`Archivo cargado: ${file.name}`);
+                    loadDataIntoSheet();
+                    
+                    // Debug: mostrar contenido en consola
+                    console.log("GeoJSON cargado correctamente:", geoData);
+                    if (geoData.features.length > 0) {
+                        console.log("Primer feature:", geoData.features[0]);
+                    }
+                } catch (error) {
+                    console.error("Error al cargar el archivo:", error);
+                    updateStatus(`Error: ${error.message}`, true);
+                    
+                    // Crear estructura vacía si hay error
+                    geoData = {
+                        type: "FeatureCollection",
+                        features: [createEmptyFeature()]
+                    };
+                    loadDataIntoSheet();
+                }
+            };
+            
+            reader.onerror = function() {
+                updateStatus("Error al leer el archivo", true);
+            };
+            
+            reader.readAsText(file);
+        });
+
+        // Función mejorada para cargar datos
+        function loadDataIntoSheet() {
+            // Verificar si hay datos
+            if (!geoData.features || geoData.features.length === 0) {
+                geoData.features = [createEmptyFeature()];
+                updateStatus("GeoJSON vacío - creada plantilla", true);
+            }
+
+            // Obtener todas las columnas únicas
+            const propertyKeys = new Set();
+            geoData.features.forEach(feature => {
+                if (feature.properties) {
+                    Object.keys(feature.properties).forEach(key => {
+                        propertyKeys.add(key);
+                    });
+                }
+            });
+            
+            currentColumns = ['geometry', ...Array.from(propertyKeys).sort()];
+            
+            rebuildSheet();
+        }
+
+        function rebuildSheet() {
+            const columnHeaders = document.getElementById('columnHeaders');
+            const rowNumbers = document.getElementById('rowNumbers');
+            const sheetRows = document.getElementById('sheetRows');
+            
+            // Limpiar
+            columnHeaders.innerHTML = '';
+            rowNumbers.innerHTML = '';
+            sheetRows.innerHTML = '';
+            
+            // Crear encabezados
+            currentColumns.forEach(col => {
+                const header = document.createElement('div');
+                header.className = 'column-header';
+                header.textContent = col;
+                columnHeaders.appendChild(header);
+            });
+            
+            // Crear filas
+            geoData.features.forEach((feature, rowIndex) => {
+                // Número de fila
+                const rowNumber = document.createElement('div');
+                rowNumber.className = 'row-number';
+                rowNumber.textContent = rowIndex + 1;
+                rowNumbers.appendChild(rowNumber);
+                
+                // Fila de datos
+                const row = document.createElement('div');
+                row.className = 'sheet-row';
+                
+                currentColumns.forEach(col => {
+                    const cell = document.createElement('div');
+                    cell.className = 'sheet-cell';
+                    if (col === 'geometry') cell.classList.add('coords-cell');
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    
+                    // Manejar geometry
+                    if (col === 'geometry') {
+                        if (feature.geometry && feature.geometry.coordinates) {
+                            input.value = feature.geometry.coordinates.join(', ');
+                        } else {
+                            input.value = '0, 0';
+                        }
+                        
+                        input.addEventListener('change', function(e) {
+                            try {
+                                const coords = e.target.value.split(',').map(Number);
+                                if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                                    if (!feature.geometry) feature.geometry = { type: "Point" };
+                                    feature.geometry.coordinates = coords;
+                                    updateStatus(`Coordenadas actualizadas en fila ${rowIndex + 1}`);
+                                } else {
+                                    throw new Error("Formato de coordenadas inválido");
+                                }
+                            } catch (error) {
+                                updateStatus(`Error: ${error.message}`, true);
+                                e.target.value = feature.geometry?.coordinates?.join(', ') || '0, 0';
+                            }
+                        });
+                    } 
+                    // Manejar propiedades
+                    else {
+                        input.value = feature.properties?.[col] || '';
+                        
+                        input.addEventListener('change', function(e) {
+                            if (!feature.properties) feature.properties = {};
+                            feature.properties[col] = e.target.value;
+                            updateStatus(`Propiedad ${col} actualizada en fila ${rowIndex + 1}`);
+                        });
+                    }
+                    
+                    cell.appendChild(input);
+                    row.appendChild(cell);
+                });
+                
+                sheetRows.appendChild(row);
+            });
+            
+            updateStatus(`Datos cargados: ${geoData.features.length} registros`);
+        }
+
+        function createEmptyFeature() {
+            // Usar coordenadas existentes si hay, o [0,0] por defecto
+            const coordinates = geoData.features.length > 0 && geoData.features[0].geometry?.coordinates
+                ? [...geoData.features[0].geometry.coordinates]
+                : [0, 0];
+            
+            return {
+                type: "Feature",
+                properties: {},
+                geometry: {
+                    type: "Point",
+                    coordinates: coordinates
+                }
+            };
+        }
+
+        function addColumn() {
+            const colName = prompt("Nombre de la nueva columna:");
+            if (!colName) return;
+            
+            if (!currentColumns.includes(colName)) {
+                currentColumns.push(colName);
+            }
+            
+            geoData.features.forEach(feature => {
+                if (!feature.properties) feature.properties = {};
+                if (!(colName in feature.properties)) {
+                    feature.properties[colName] = '';
+                }
+            });
+            
+            rebuildSheet();
+            updateStatus(`Columna agregada: ${colName}`);
+        }
+
+        function addRow() {
+            const newFeature = createEmptyFeature();
+            
+            // Copiar estructura de propiedades
+            if (geoData.features.length > 0 && geoData.features[0].properties) {
+                Object.keys(geoData.features[0].properties).forEach(key => {
+                    newFeature.properties[key] = '';
+                });
+            }
+            
+            geoData.features.push(newFeature);
+            rebuildSheet();
+            updateStatus(`Nueva fila agregada`);
+        }
+
+        function saveFile() {
+            const dataStr = JSON.stringify(geoData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'geodata_edited.geojson';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            updateStatus(`Archivo guardado como geodata_edited.geojson`);
+        }
+
+        function updateStatus(message, isError = false) {
+            const statusBar = document.getElementById('statusBar');
+            const titleStatus = document.getElementById('titleStatus');
+            
+            statusBar.textContent = message;
+            titleStatus.textContent = message;
+            
+            if (isError) {
+                statusBar.classList.add('error');
+                titleStatus.classList.add('error');
+            } else {
+                statusBar.classList.remove('error');
+                titleStatus.classList.remove('error');
+            }
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar datos vacíos al inicio
+            loadDataIntoSheet();
+        });
+    </script>
+</body>
+</html>
