@@ -3,36 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoJSON Excel Editor</title>
+    <title>GeoJSON Editor</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
             overflow: hidden;
+            background: #f3f3f3;
         }
         
-        /* Barra de título estilo Excel */
+        /* Barra de título */
         .title-bar {
-            background: #1e1e1e;
+            background: #0078d7;
             color: white;
             padding: 5px 10px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
             font-size: 12px;
         }
         
-        /* Barra de menú estilo Excel */
+        /* Barra de menú */
         .menu-bar {
             background: #f3f3f3;
             display: flex;
-            padding: 2px 0;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 0;
+            border-bottom: 1px solid #d4d4d4;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
         .menu-item {
-            padding: 5px 10px;
+            padding: 8px 15px;
             cursor: pointer;
             position: relative;
             font-size: 13px;
@@ -69,78 +70,62 @@
             background: #e5f3ff;
         }
         
-        /* Barra de fórmulas */
-        .formula-bar {
+        /* Contenedor principal */
+        .sheet-container {
             display: flex;
+            height: calc(100vh - 60px);
+            overflow: auto;
+            background: white;
+        }
+        
+        /* Números de fila */
+        .row-numbers {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background: #f8f8f8;
+        }
+        
+        .row-number {
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #e0e0e0;
             border-bottom: 1px solid #e0e0e0;
-            padding: 3px;
-            background: #f9f9f9;
-        }
-        
-        .formula-bar label {
             font-size: 12px;
-            padding: 4px;
             color: #555;
-        }
-        
-        .formula-input {
-            flex-grow: 1;
-            border: 1px solid #d4d4d4;
-            padding: 3px;
-            font-family: 'Consolas', monospace;
-            font-size: 13px;
+            background: #f8f8f8;
+            position: relative;
+            user-select: none;
         }
         
         /* Cabeceras de columnas */
         .column-headers {
             display: flex;
-            background: #f8f8f8;
-            border-bottom: 1px solid #e0e0e0;
             position: sticky;
             top: 0;
             z-index: 10;
+            background: #f8f8f8;
         }
         
         .column-header {
-            min-width: 100px;
+            min-width: 120px;
+            height: 24px;
             border-right: 1px solid #e0e0e0;
-            padding: 3px 5px;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 5px;
             font-size: 12px;
             font-weight: normal;
             color: #333;
-            text-align: center;
-        }
-        
-        /* Cabeceras de filas */
-        .row-number {
-            min-width: 30px;
-            background: #f8f8f8;
-            border-right: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-            text-align: center;
-            font-size: 12px;
-            color: #555;
-            position: sticky;
-            left: 0;
-        }
-        
-        /* Grid principal */
-        .sheet-container {
             display: flex;
-            overflow: auto;
-            height: calc(100vh - 100px);
+            align-items: center;
+            justify-content: center;
+            user-select: none;
         }
         
-        .row-numbers {
-            display: flex;
-            flex-direction: column;
-            background: #f8f8f8;
-            position: sticky;
-            left: 0;
-            z-index: 5;
-        }
-        
-        .sheet-grid {
+        /* Celdas de datos */
+        .sheet-rows {
             display: flex;
             flex-direction: column;
         }
@@ -150,30 +135,44 @@
         }
         
         .sheet-cell {
-            min-width: 100px;
+            min-width: 120px;
             height: 24px;
             border-right: 1px solid #e0e0e0;
             border-bottom: 1px solid #e0e0e0;
-            padding: 2px;
-            box-sizing: border-box;
-            font-size: 13px;
-            overflow: hidden;
+            padding: 0;
+            position: relative;
         }
         
         .sheet-cell input {
             width: 100%;
             height: 100%;
             border: none;
-            outline: none;
-            padding: 2px;
+            padding: 0 5px;
             font-family: inherit;
-            font-size: inherit;
-            background: transparent;
+            font-size: 12px;
+            outline: none;
+            box-sizing: border-box;
         }
         
         .sheet-cell input:focus {
-            background: #fff;
+            background: #e5f3ff;
             border: 1px solid #4d90fe;
+        }
+        
+        .coords-cell input {
+            font-family: monospace;
+            color: #0066cc;
+        }
+        
+        /* Selección */
+        .selected-row .row-number,
+        .selected-row .sheet-cell {
+            background: #e5f3ff;
+        }
+        
+        .selected-column .column-header,
+        .selected-column .sheet-cell {
+            background: #e5f3ff;
         }
         
         /* Barra de estado */
@@ -187,25 +186,13 @@
             bottom: 0;
             width: 100%;
         }
-        
-        /* Celda activa */
-        .active-cell {
-            background: #e5f3ff;
-            position: relative;
-        }
-        
-        /* Coordenadas editables */
-        .coords-cell input {
-            font-family: monospace;
-            color: #0066cc;
-        }
     </style>
 </head>
 <body>
     <!-- Barra de título -->
     <div class="title-bar">
         <span>GeoJSON Editor</span>
-        <span>Ready</span>
+        <span id="titleStatus">Ready</span>
     </div>
     
     <!-- Barra de menú -->
@@ -220,26 +207,22 @@
         <div class="menu-item">
             Edit
             <div class="menu-dropdown">
-                <div class="menu-option" onclick="copyCell()">Copy</div>
-                <div class="menu-option" onclick="pasteCell()">Paste</div>
+                <div class="menu-option" onclick="copySelection()">Copy</div>
+                <div class="menu-option" onclick="pasteToSelection()">Paste</div>
                 <div class="menu-option" onclick="addColumn()">Add Column</div>
                 <div class="menu-option" onclick="addRow()">Add Row</div>
+                <div class="menu-option" onclick="selectRow()">Select Row</div>
+                <div class="menu-option" onclick="selectColumn()">Select Column</div>
             </div>
         </div>
-    </div>
-    
-    <!-- Barra de fórmulas -->
-    <div class="formula-bar">
-        <label>fx</label>
-        <input type="text" class="formula-input" id="formulaInput" readonly>
     </div>
     
     <!-- Hoja de cálculo -->
     <div class="sheet-container">
         <div class="row-numbers" id="rowNumbers"></div>
-        <div id="sheetGrid">
+        <div>
             <div class="column-headers" id="columnHeaders"></div>
-            <div id="sheetRows"></div>
+            <div class="sheet-rows" id="sheetRows"></div>
         </div>
     </div>
     
@@ -258,7 +241,11 @@
         };
         let currentColumns = [];
         let clipboard = null;
-        let activeCell = null;
+        let selectedRange = {
+            type: null, // 'row', 'column' o 'cell'
+            index: null,
+            data: null
+        };
 
         // Cargar archivo
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -325,6 +312,7 @@
                 const rowNumber = document.createElement('div');
                 rowNumber.className = 'row-number';
                 rowNumber.textContent = rowIndex + 1;
+                rowNumber.dataset.rowIndex = rowIndex;
                 rowNumbers.appendChild(rowNumber);
                 
                 // Fila de celdas
@@ -351,10 +339,9 @@
                     }
                     
                     input.addEventListener('focus', function() {
-                        document.querySelectorAll('.active-cell').forEach(c => c.classList.remove('active-cell'));
-                        cell.classList.add('active-cell');
+                        clearSelection();
                         activeCell = {row: rowIndex, col: col};
-                        updateFormulaInput();
+                        updateStatus(`Editing: ${col} in row ${rowIndex + 1}`);
                     });
                     
                     cell.appendChild(input);
@@ -394,29 +381,20 @@
             updateStatus(`Updated ${col} in row ${rowIndex + 1}`);
         }
 
-        // Actualizar barra de fórmulas
-        function updateFormulaInput() {
-            if (!activeCell) return;
-            
-            const formulaInput = document.getElementById('formulaInput');
-            const rowIndex = activeCell.row;
-            const col = activeCell.col;
-            
-            if (col === 'geometry') {
-                formulaInput.value = `[${geoData.features[rowIndex].geometry.coordinates.join(', ')}]`;
-            } else {
-                formulaInput.value = geoData.features[rowIndex].properties[col] || '';
-            }
-        }
-
         // Crear feature vacío
         function createEmptyFeature() {
+            // Usar las coordenadas del primer feature si existe
+            let coordinates = [0, 0];
+            if (geoData.features.length > 0) {
+                coordinates = [...geoData.features[0].geometry.coordinates];
+            }
+            
             return {
                 type: "Feature",
                 properties: {},
                 geometry: {
                     type: "Point",
-                    coordinates: [0, 0]
+                    coordinates: coordinates
                 }
             };
         }
@@ -458,49 +436,117 @@
             updateStatus(`Added new row`);
         }
 
-        // Copiar celda
-        function copyCell() {
-            if (!activeCell) return;
+        // Seleccionar fila
+        function selectRow() {
+            const rowIndex = parseInt(prompt("Enter row number to select:"));
+            if (isNaN(rowIndex) return;
             
-            const rowIndex = activeCell.row;
-            const col = activeCell.col;
+            clearSelection();
             
-            if (col === 'geometry') {
-                clipboard = `[${geoData.features[rowIndex].geometry.coordinates.join(', ')}]`;
+            const row = document.querySelector(`.sheet-row[data-row-index="${rowIndex - 1}"]`);
+            const rowNumber = document.querySelector(`.row-number[data-row-index="${rowIndex - 1}"]`);
+            
+            if (row && rowNumber) {
+                row.classList.add('selected-row');
+                rowNumber.classList.add('selected-row');
+                
+                selectedRange = {
+                    type: 'row',
+                    index: rowIndex - 1,
+                    data: JSON.parse(JSON.stringify(geoData.features[rowIndex - 1]))
+                };
+                
+                updateStatus(`Selected row ${rowIndex}`);
             } else {
-                clipboard = geoData.features[rowIndex].properties[col] || '';
+                updateStatus(`Invalid row number`, true);
             }
-            
-            updateStatus(`Copied: ${clipboard}`);
         }
 
-        // Pegar celda
-        function pasteCell() {
-            if (!activeCell || clipboard === null) return;
+        // Seleccionar columna
+        function selectColumn() {
+            const colName = prompt("Enter column name to select:");
+            if (!colName) return;
             
-            const rowIndex = activeCell.row;
-            const col = activeCell.col;
+            clearSelection();
             
-            if (col === 'geometry') {
-                try {
-                    const coords = clipboard
-                        .replace(/[\[\]]/g, '')
-                        .split(',')
-                        .map(coord => parseFloat(coord.trim()));
-                    
-                    if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-                        geoData.features[rowIndex].geometry.coordinates = coords;
-                        updateStatus(`Pasted coordinates to row ${rowIndex + 1}`);
-                        rebuildSheet();
-                    }
-                } catch (error) {
-                    updateStatus(`Error pasting coordinates: ${error.message}`, true);
-                }
-            } else {
-                geoData.features[rowIndex].properties[col] = clipboard;
-                updateStatus(`Pasted value to ${col} in row ${rowIndex + 1}`);
-                rebuildSheet();
+            const colIndex = currentColumns.indexOf(colName);
+            if (colIndex === -1) {
+                updateStatus(`Column "${colName}" not found`, true);
+                return;
             }
+            
+            document.querySelectorAll(`.sheet-cell:nth-child(${colIndex + 1})`).forEach(cell => {
+                cell.classList.add('selected-column');
+            });
+            
+            document.querySelector(`.column-header:nth-child(${colIndex + 1})`).classList.add('selected-column');
+            
+            selectedRange = {
+                type: 'column',
+                index: colIndex,
+                name: colName,
+                data: geoData.features.map(feature => {
+                    return colName === 'geometry' ? 
+                        feature.geometry.coordinates : 
+                        feature.properties[colName];
+                })
+            };
+            
+            updateStatus(`Selected column "${colName}"`);
+        }
+
+        // Limpiar selección
+        function clearSelection() {
+            document.querySelectorAll('.selected-row, .selected-column').forEach(el => {
+                el.classList.remove('selected-row', 'selected-column');
+            });
+            selectedRange = {type: null, index: null, data: null};
+        }
+
+        // Copiar selección
+        function copySelection() {
+            if (!selectedRange.type) {
+                updateStatus("No selection to copy", true);
+                return;
+            }
+            
+            clipboard = {
+                type: selectedRange.type,
+                data: JSON.parse(JSON.stringify(selectedRange.data))
+            };
+            
+            updateStatus(`Copied ${selectedRange.type} ${selectedRange.name || selectedRange.index + 1}`);
+        }
+
+        // Pegar selección
+        function pasteToSelection() {
+            if (!clipboard) {
+                updateStatus("Clipboard is empty", true);
+                return;
+            }
+            
+            if (clipboard.type === 'row' && selectedRange.type === 'row') {
+                // Pegar fila completa
+                geoData.features[selectedRange.index] = JSON.parse(JSON.stringify(clipboard.data));
+                updateStatus(`Pasted row to row ${selectedRange.index + 1}`);
+            } 
+            else if (clipboard.type === 'column' && selectedRange.type === 'column') {
+                // Pegar columna completa
+                geoData.features.forEach((feature, i) => {
+                    if (selectedRange.name === 'geometry') {
+                        feature.geometry.coordinates = [...clipboard.data[i]];
+                    } else {
+                        feature.properties[selectedRange.name] = clipboard.data[i];
+                    }
+                });
+                updateStatus(`Pasted column to "${selectedRange.name}"`);
+            }
+            else {
+                updateStatus("Paste operation not supported for this selection", true);
+                return;
+            }
+            
+            rebuildSheet();
         }
 
         // Guardar archivo
@@ -521,11 +567,18 @@
         // Actualizar barra de estado
         function updateStatus(message, isError = false) {
             const statusBar = document.getElementById('statusBar');
-            statusBar.textContent = message;
-            statusBar.style.color = isError ? 'red' : '#555';
+            const titleStatus = document.getElementById('titleStatus');
             
-            // Actualizar también la barra de título
-            document.querySelector('.title-bar span:last-child').textContent = message;
+            statusBar.textContent = message;
+            titleStatus.textContent = message;
+            
+            if (isError) {
+                statusBar.style.color = 'red';
+                titleStatus.style.color = 'red';
+            } else {
+                statusBar.style.color = '#555';
+                titleStatus.style.color = 'white';
+            }
         }
 
         // Inicializar
