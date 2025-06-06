@@ -1,0 +1,369 @@
+body {
+    font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    color: #212121;
+    overflow: hidden; /* Evitar scroll en el body */
+}
+
+/* Barra de título estilo Excel */
+.title-bar {
+    background: #217346; /* Verde Excel */
+    color: white;
+    padding: 5px 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    height: 24px;
+    align-items: center;
+}
+
+/* Barra de menú estilo Excel */
+.menu-bar {
+    background: #f3f2f1;
+    display: flex;
+    padding: 0;
+    border-bottom: 1px solid #d4d4d4;
+    height: 36px;
+    align-items: center;
+}
+
+.menu-item {
+    padding: 8px 15px;
+    cursor: pointer;
+    position: relative;
+    font-size: 13px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.menu-item:hover {
+    background: #e6e6e6;
+}
+
+.menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #d4d4d4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    z-index: 100;
+    min-width: 180px;
+}
+
+.menu-item.active .menu-dropdown {
+    display: block;
+}
+
+.menu-option {
+    padding: 6px 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.menu-option:hover {
+    background: #e5f3ff;
+}
+
+/* Separador de menú */
+.menu-separator {
+    height: 1px;
+    background-color: #d4d4d4;
+    margin: 4px 0;
+}
+
+/* Contenedor principal de la hoja */
+.sheet-container {
+    height: calc(100vh - 110px); /* Ajustar altura para dejar espacio a la barra de estado */
+    overflow: auto; /* Mostrar barras de desplazamiento */
+    background: white;
+    position: relative;
+    border: 1px solid #d4d4d4;
+}
+
+/* Estructura de tabla para la hoja */
+.sheet-table {
+    border-collapse: collapse;
+    table-layout: fixed; /* Importante para el redimensionamiento */
+    width: max-content; /* Permitir que la tabla sea más ancha que el contenedor */
+    min-width: 100%; /* Asegurar que ocupe al menos todo el ancho disponible */
+}
+
+.sheet-table th, .sheet-table td {
+    border: 1px solid #e0e0e0;
+    padding: 0;
+    box-sizing: border-box;
+    height: 22px;
+    min-height: 22px; /* Altura mínima para asegurar visibilidad */
+    font-size: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Encabezados de columna */
+.sheet-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f8f9fa;
+}
+
+.sheet-table th {
+    background: #f8f9fa;
+    font-weight: normal;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding: 0 5px;
+}
+
+.sheet-table th:hover {
+    background: #e9e9e9;
+}
+
+.sheet-table th.column-selected {
+    background: #d3e3fd !important;
+}
+
+/* Resizer para cambiar el ancho de las columnas */
+.column-resizer {
+    position: absolute;
+    top: 0;
+    right: -2px; /* Ajuste para que esté sobre el borde */
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 20;
+}
+
+/* Números de fila */
+.row-number-cell {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: #f8f9fa;
+    width: 40px;
+    min-width: 40px;
+    text-align: center;
+    color: #444;
+    cursor: pointer;
+    user-select: none;
+}
+
+.row-number-cell:hover {
+    background: #e9e9e9;
+}
+
+.row-number-cell.row-selected {
+    background: #d3e3fd !important;
+}
+
+/* Esquina superior izquierda */
+.corner-header-cell {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 15;
+    background: #f8f9fa;
+    width: 40px;
+    min-width: 40px;
+}
+
+/* Celdas de datos */
+.sheet-table td {
+    height: auto; /* Altura automática para permitir ajuste de texto */
+    min-height: 22px; /* Altura mínima */
+    cursor: cell;
+}
+
+.sheet-table tr.row-selected td {
+    background-color: #d3e3fd;
+}
+
+.sheet-table td.cell-selected {
+    background-color: #d3e3fd !important;
+    outline: 2px solid #0078d7;
+}
+
+/* Modo wrap para las celdas */
+.sheet-table td.wrap-mode input {
+    white-space: normal; /* Permite el ajuste de texto */
+    height: auto; /* Altura automática */
+    overflow: visible; /* Muestra todo el contenido */
+    word-break: break-word; /* Rompe palabras largas */
+}
+
+.sheet-table td input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 0 5px;
+    font-family: inherit;
+    font-size: 12px;
+    outline: none;
+    background: transparent;
+    text-overflow: ellipsis;
+    white-space: nowrap; /* Por defecto no hay wrap */
+    overflow: hidden;
+}
+
+.sheet-table td input:focus {
+    outline: 2px solid #217346;
+    z-index: 2;
+    position: relative;
+}
+
+.coords-cell input {
+    font-family: monospace;
+    color: #0066cc;
+}
+
+/* Tooltip para mostrar el contenido completo */
+.sheet-table td:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background: #f8f9fa;
+    border: 1px solid #d4d4d4;
+    padding: 5px;
+    border-radius: 3px;
+    z-index: 20;
+    top: 100%;
+    left: 0;
+    white-space: normal;
+    max-width: 300px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: block;
+}
+
+.sheet-table td:not([data-tooltip]):hover::after {
+    display: none;
+}
+
+/* Estilos para el editor de nombres de columnas */
+.column-header-editor {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+    font-size: 12px;
+    text-align: center;
+    outline: 2px solid #217346;
+    z-index: 30;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Barra de estado */
+.status-bar {
+    background: #f3f2f1;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: #555;
+    border-top: 1px solid #ddd;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 20px;
+}
+
+.error {
+    color: #d83b01;
+}
+
+/* Estilos para los botones de la barra de herramientas */
+.toolbar {
+    display: flex;
+    background: #f3f2f1;
+    padding: 4px 10px;
+    border-bottom: 1px solid #d4d4d4;
+}
+
+.toolbar-button {
+    padding: 4px 8px;
+    margin-right: 5px;
+    background: #f3f2f1;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+}
+
+.toolbar-button:hover {
+    background: #e6e6e6;
+    border: 1px solid #d4d4d4;
+}
+
+.toolbar-button.disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.toolbar-button.disabled:hover {
+    background: #f3f2f1;
+    border: 1px solid transparent;
+}
+
+.toolbar-button svg {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}
+
+/* Estilos para el botón de ajuste de texto */
+.toolbar-toggle {
+    padding: 4px 8px;
+    margin-right: 5px;
+    background: #f3f2f1;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+}
+
+.toolbar-toggle.active {
+    background: #d3e3fd;
+    border: 1px solid #0078d7;
+}
+
+.toolbar-toggle:hover {
+    background: #e6e6e6;
+    border: 1px solid #d4d4d4;
+}
+
+.toolbar-toggle svg {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}
+
+/* Estilos para la primera fila (nombres de propiedades) */
+.property-name-row td input {
+    font-weight: bold;
+    color: #217346;
+}
+
+/* Estilos para la selección de celdas */
+.selection-box {
+    position: absolute;
+    border: 2px solid #0078d7;
+    background-color: rgba(0, 120, 215, 0.1);
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Celda activa (focus) */
+.sheet-table td.cell-active {
+    outline: 3px solid #217346;
+    outline-offset: -1px;
+    z-index: 10;
+}
