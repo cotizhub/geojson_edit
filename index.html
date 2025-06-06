@@ -749,7 +749,7 @@
             });
         }
         
-        // CORRECCIÓN 1: Configurar eventos de selección - ARREGLADO
+        // Configurar eventos de selección de celdas mejorados
         function setupSelectionEvents() {
             const sheetContainer = document.getElementById('sheetContainer');
             
@@ -759,6 +759,7 @@
                 }
                 
                 if (e.target.tagName === 'INPUT') {
+                    // Si hacemos clic en un input, establecer como celda activa
                     const cell = e.target.closest('td');
                     if (cell) {
                         const row = parseInt(cell.dataset.row);
@@ -774,42 +775,19 @@
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
                 
-                // Si no se está manteniendo Ctrl o Shift, limpiar la selección
+                // Establecer como celda activa
+                setActiveCell(row, col);
+                
+                // Iniciar selección múltiple
+                isSelecting = true;
+                selectionStartCell = { row, col };
+                selectionEndCell = { row, col };
+                
                 if (!e.ctrlKey && !e.shiftKey) {
                     selectedCells.clear();
                 }
                 
-                // Si se mantiene Shift y hay una celda activa, seleccionar rango
-                if (e.shiftKey && activeCell) {
-                    selectedCells.clear();
-                    const minRow = Math.min(activeCell.row, row);
-                    const maxRow = Math.max(activeCell.row, row);
-                    const minCol = Math.min(activeCell.col, col);
-                    const maxCol = Math.max(activeCell.col, col);
-                    
-                    for (let r = minRow; r <= maxRow; r++) {
-                        for (let c = minCol; c <= maxCol; c++) {
-                            selectedCells.add(`${r},${c}`);
-                        }
-                    }
-                } 
-                // Si no, seleccionar celda individual
-                else {
-                    if (e.ctrlKey) {
-                        // Toggle selección con Ctrl
-                        const cellKey = `${row},${col}`;
-                        if (selectedCells.has(cellKey)) {
-                            selectedCells.delete(cellKey);
-                        } else {
-                            selectedCells.add(cellKey);
-                        }
-                    } else {
-                        selectedCells.add(`${row},${col}`);
-                    }
-                    setActiveCell(row, col);
-                }
-                
-                highlightSelectedCells();
+                updateSelection(e.ctrlKey, e.shiftKey);
                 e.preventDefault();
             });
             
@@ -854,7 +832,7 @@
             const minRow = Math.min(selectionStartCell.row, selectionEndCell.row);
             const maxRow = Math.max(selectionStartCell.row, selectionEndCell.row);
             const minCol = Math.min(selectionStartCell.col, selectionEndCell.col);
-Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
+            const maxCol = Math.max(selectionStartCell.col, selectionEndCell.col);
             
             for (let r = minRow; r <= maxRow; r++) {
                 for (let c = minCol; c <= maxCol; c++) {
@@ -946,7 +924,9 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
                 th.style.minWidth = colWidth + 'px';
                 th.style.maxWidth = colWidth + 'px';
                 
-                // CORRECCIÓN: No agregar event listener aquí porque se maneja en setupSelectionEvents
+                th.addEventListener('click', function() {
+                    selectColumn(colIndex);
+                });
                 
                 const resizer = document.createElement('div');
                 resizer.className = 'column-resizer';
@@ -1051,7 +1031,9 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
                 rowNumTd.className = 'row-number-cell';
                 rowNumTd.textContent = rowIndex + 2;
                 rowNumTd.dataset.index = rowIndex;
-                // CORRECCIÓN: No agregar event listener aquí porque se maneja en setupSelectionEvents
+                rowNumTd.addEventListener('click', function() {
+                    selectRow(rowIndex);
+                });
                 tr.appendChild(rowNumTd);
                 
                 currentColumns.forEach((col, colIndex) => {
@@ -1100,10 +1082,7 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
                             }
                         });
                     } else {
-                        // CORRECCIÓN 2: Asegurar que la propiedad existe correctamente
-                        const value = feature.properties && feature.properties.hasOwnProperty(col) 
-                            ? feature.properties[col] 
-                            : '';
+                        const value = feature.properties?.[col] || '';
                         input.value = value;
                         
                         if (String(value).length > 15) {
@@ -1137,7 +1116,6 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
         }
         
         // Función para seleccionar una fila
-        // Modificar la función selectRow
         function selectRow(rowIndex) {
             saveToHistory();
             selectedCells.clear();
@@ -1146,21 +1124,12 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
                 selectedCells.add(`${rowIndex},${colIndex}`);
             }
             
-            // No llamar a setActiveCell aquí, solo actualizar la selección
+            setActiveCell(rowIndex, 0);
             highlightSelectedCells();
             updateStatus(`Fila ${rowIndex + 2} seleccionada`);
-            
-            // Agregar evento para permitir edición al hacer doble clic
-            const rowNumTd = document.querySelector(`.row-number-cell[data-index="${rowIndex}"]`);
-            if (rowNumTd) {
-                rowNumTd.addEventListener('dblclick', function() {
-                    setActiveCell(rowIndex, 0);
-                    startEditingActiveCell();
-                });
-            }
         }
-
-        // Modificar la función selectColumn
+        
+        // Función para seleccionar una columna
         function selectColumn(colIndex) {
             saveToHistory();
             selectedCells.clear();
@@ -1169,22 +1138,14 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
                 selectedCells.add(`${rowIndex},${colIndex}`);
             }
             
-            // No llamar a setActiveCell aquí, solo actualizar la selección
+            setActiveCell(0, colIndex);
             highlightSelectedCells();
             
             const excelColName = getExcelColumnName(colIndex);
             const propertyName = columnNameMap[excelColName];
             updateStatus(`Columna ${excelColName} (${propertyName}) seleccionada`);
-            
-            // Agregar evento para permitir edición al hacer doble clic
-            const colHeader = document.querySelector(`th[data-index="${colIndex}"]`);
-            if (colHeader) {
-                colHeader.addEventListener('dblclick', function() {
-                    setActiveCell(0, colIndex);
-                    startEditingActiveCell();
-                });
-            }
         }
+        
         // Funciones de redimensionamiento de columnas (sin cambios)
         function startColumnResize(e) {
             e.preventDefault();
@@ -1226,7 +1187,7 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
             updateStatus(`Columna ${excelColName} (${propertyName}) redimensionada a ${newWidth}px`);
         }
         
-        // CORRECCIÓN 3: Función para agregar una nueva columna - ARREGLADA
+        // Función para agregar una nueva columna
         function addColumn() {
             saveToHistory();
             
@@ -1243,7 +1204,7 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
             const excelColName = getExcelColumnName(newColIndex);
             columnNameMap[excelColName] = newColName;
             
-            // Asegurarse de agregar la propiedad a todas las features existentes
+            // CORRECCIÓN: Agregar la propiedad a todas las features existentes
             geoData.features.forEach(feature => {
                 if (!feature.properties) feature.properties = {};
                 feature.properties[newColName] = "";
@@ -1251,48 +1212,8 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
             
             rebuildSheet();
             updateStatus(`Nueva columna "${newColName}" (${excelColName}) agregada`);
-            
-            // Asegurar que las nuevas celdas sean editables
-            setTimeout(() => {
-                const inputs = document.querySelectorAll(`.sheet-table td[data-col="${newColIndex}"] input`);
-                inputs.forEach(input => {
-                    input.addEventListener('change', function(e) {
-                        const row = parseInt(input.dataset.row);
-                        const col = parseInt(input.dataset.col);
-                        const colName = currentColumns[col];
-                        
-                        if (row >= 0 && row < geoData.features.length) {
-                            saveToHistory();
-                            
-                            if (colName === 'geometry') {
-                                try {
-                                    const coords = e.target.value.split(',').map(Number);
-                                    if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-                                        if (!geoData.features[row].geometry) geoData.features[row].geometry = { type: "Point" };
-                                        geoData.features[row].geometry.coordinates = coords;
-                                    }
-                                } catch (error) {
-                                    updateStatus(`Error: ${error.message}`, true);
-                                    e.target.value = geoData.features[row].geometry?.coordinates?.join(', ') || '0, 0';
-                                }
-                            } else {
-                                if (!geoData.features[row].properties) geoData.features[row].properties = {};
-                                geoData.features[row].properties[colName] = e.target.value;
-                                
-                                const cell = input.closest('td');
-                                if (String(e.target.value).length > 15) {
-                                    cell.setAttribute('data-tooltip', e.target.value);
-                                } else {
-                                    cell.removeAttribute('data-tooltip');
-                                }
-                            }
-                            
-                            updateStatus(`Propiedad ${colName} actualizada en fila ${row + 2}`);
-                        }
-                    });
-                });
-            }, 100);
         }
+        
         // Función para agregar una nueva fila
         function addRow() {
             saveToHistory();
@@ -1711,4 +1632,4 @@ Col = Math.min(selectionStartCell.col, selectionEndCell.col);ectionEndCell.col);
         }
     </script>
 </body>
-</html>Col = Math.min(selectionStartCell.col, sel
+</html>
