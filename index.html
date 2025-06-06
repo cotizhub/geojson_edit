@@ -11,12 +11,11 @@
             padding: 0;
             background: #ffffff;
             color: #212121;
-            overflow: hidden; /* Evitar scroll en el body */
+            overflow: hidden;
         }
         
-        /* Barra de título estilo Excel */
         .title-bar {
-            background: #217346; /* Verde Excel */
+            background: #217346;
             color: white;
             padding: 5px 10px;
             display: flex;
@@ -26,7 +25,6 @@
             align-items: center;
         }
         
-        /* Barra de menú estilo Excel */
         .menu-bar {
             background: #f3f2f1;
             display: flex;
@@ -77,28 +75,25 @@
             background: #e5f3ff;
         }
         
-        /* Separador de menú */
         .menu-separator {
             height: 1px;
             background-color: #d4d4d4;
             margin: 4px 0;
         }
         
-        /* Contenedor principal de la hoja */
         .sheet-container {
-            height: calc(100vh - 110px); /* Ajustar altura para dejar espacio a la barra de estado */
-            overflow: auto; /* Mostrar barras de desplazamiento */
+            height: calc(100vh - 110px);
+            overflow: auto;
             background: white;
             position: relative;
             border: 1px solid #d4d4d4;
         }
         
-        /* Estructura de tabla para la hoja */
         .sheet-table {
             border-collapse: collapse;
-            table-layout: fixed; /* Importante para el redimensionamiento */
-            width: max-content; /* Permitir que la tabla sea más ancha que el contenedor */
-            min-width: 100%; /* Asegurar que ocupe al menos todo el ancho disponible */
+            table-layout: fixed;
+            width: max-content;
+            min-width: 100%;
         }
         
         .sheet-table th, .sheet-table td {
@@ -106,13 +101,12 @@
             padding: 0;
             box-sizing: border-box;
             height: 22px;
-            min-height: 22px; /* Altura mínima para asegurar visibilidad */
+            min-height: 22px;
             font-size: 12px;
             overflow: hidden;
             position: relative;
         }
         
-        /* Encabezados de columna */
         .sheet-table thead {
             position: sticky;
             top: 0;
@@ -139,18 +133,16 @@
             background: #d3e3fd !important;
         }
         
-        /* Resizer para cambiar el ancho de las columnas */
         .column-resizer {
             position: absolute;
             top: 0;
-            right: -2px; /* Ajuste para que esté sobre el borde */
+            right: -2px;
             width: 5px;
             height: 100%;
             cursor: col-resize;
             z-index: 20;
         }
         
-        /* Números de fila */
         .row-number-cell {
             position: sticky;
             left: 0;
@@ -172,7 +164,6 @@
             background: #d3e3fd !important;
         }
         
-        /* Esquina superior izquierda */
         .corner-header-cell {
             position: sticky;
             top: 0;
@@ -183,10 +174,9 @@
             min-width: 40px;
         }
         
-        /* Celdas de datos */
         .sheet-table td {
-            height: auto; /* Altura automática para permitir ajuste de texto */
-            min-height: 22px; /* Altura mínima */
+            height: auto;
+            min-height: 22px;
             cursor: cell;
         }
         
@@ -199,12 +189,11 @@
             outline: 2px solid #0078d7;
         }
         
-        /* Modo wrap para las celdas */
         .sheet-table td.wrap-mode input {
-            white-space: normal; /* Permite el ajuste de texto */
-            height: auto; /* Altura automática */
-            overflow: visible; /* Muestra todo el contenido */
-            word-break: break-word; /* Rompe palabras largas */
+            white-space: normal;
+            height: auto;
+            overflow: visible;
+            word-break: break-word;
         }
         
         .sheet-table td input {
@@ -217,7 +206,7 @@
             outline: none;
             background: transparent;
             text-overflow: ellipsis;
-            white-space: nowrap; /* Por defecto no hay wrap */
+            white-space: nowrap;
             overflow: hidden;
         }
         
@@ -232,7 +221,6 @@
             color: #0066cc;
         }
         
-        /* Tooltip para mostrar el contenido completo */
         .sheet-table td:hover::after {
             content: attr(data-tooltip);
             position: absolute;
@@ -253,22 +241,6 @@
             display: none;
         }
         
-        /* Estilos para el editor de nombres de columnas */
-        .column-header-editor {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: white;
-            font-size: 12px;
-            text-align: center;
-            outline: 2px solid #217346;
-            z-index: 30;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        
-        /* Barra de estado */
         .status-bar {
             background: #f3f2f1;
             padding: 4px 10px;
@@ -285,7 +257,6 @@
             color: #d83b01;
         }
         
-        /* Estilos para los botones de la barra de herramientas */
         .toolbar {
             display: flex;
             background: #f3f2f1;
@@ -325,7 +296,6 @@
             margin-right: 4px;
         }
         
-        /* Estilos para el botón de ajuste de texto */
         .toolbar-toggle {
             padding: 4px 8px;
             margin-right: 5px;
@@ -353,22 +323,11 @@
             margin-right: 4px;
         }
         
-        /* Estilos para la primera fila (nombres de propiedades) */
         .property-name-row td input {
             font-weight: bold;
             color: #217346;
         }
         
-        /* Estilos para la selección de celdas */
-        .selection-box {
-            position: absolute;
-            border: 2px solid #0078d7;
-            background-color: rgba(0, 120, 215, 0.1);
-            pointer-events: none;
-            z-index: 100;
-        }
-
-        /* Celda activa (focus) */
         .sheet-table td.cell-active {
             outline: 3px solid #217346;
             outline-offset: -1px;
@@ -448,7 +407,6 @@
                 </tr>
             </thead>
             <tbody id="sheetTableBody">
-                <!-- Filas de datos generadas dinámicamente -->
             </tbody>
         </table>
     </div>
@@ -515,10 +473,11 @@
                 }
             ]
         };
+        
         let currentColumns = [];
         let columnWidths = {};
         let selectedCells = new Set();
-        let activeCell = null; // Celda que tiene el foco para navegación
+        let activeCell = null;
         let isWrapMode = true;
         let undoStack = [];
         let redoStack = [];
@@ -530,9 +489,8 @@
         let isSelecting = false;
         let selectionStartCell = null;
         let selectionEndCell = null;
-        let selectionBox = null;
         
-        // Inicializar la aplicación
+        // Inicializar aplicación
         document.addEventListener('DOMContentLoaded', function() {
             processGeoData();
             setupMenuEvents();
@@ -582,56 +540,39 @@
             });
         }
         
-        // Configurar eventos de teclado mejorados
+        // Configurar eventos de teclado
         function setupKeyboardEvents() {
             document.addEventListener('keydown', function(e) {
-                // Solo procesar eventos de teclado si no estamos editando un input
                 if (document.activeElement.tagName === 'INPUT') {
                     return;
                 }
 
-                // Undo: Ctrl+Z
                 if (e.ctrlKey && e.key === 'z') {
                     e.preventDefault();
                     undoAction();
-                }
-                // Redo: Ctrl+Y
-                else if (e.ctrlKey && e.key === 'y') {
+                } else if (e.ctrlKey && e.key === 'y') {
                     e.preventDefault();
                     redoAction();
-                }
-                // Delete: Delete key
-                else if (e.key === 'Delete') {
+                } else if (e.key === 'Delete') {
                     e.preventDefault();
                     deleteSelected();
-                }
-                // Copy: Ctrl+C
-                else if (e.ctrlKey && e.key === 'c') {
+                } else if (e.ctrlKey && e.key === 'c') {
                     e.preventDefault();
                     copySelection();
-                }
-                // Paste: Ctrl+V
-                else if (e.ctrlKey && e.key === 'v') {
+                } else if (e.ctrlKey && e.key === 'v') {
                     e.preventDefault();
                     pasteSelection();
-                }
-                // Navegación con flechas
-                else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                     e.preventDefault();
                     navigateWithArrows(e.key);
-                }
-                // Enter para editar celda
-                else if (e.key === 'Enter' && activeCell) {
+                } else if (e.key === 'Enter' && activeCell) {
                     e.preventDefault();
                     startEditingActiveCell();
-                }
-                // Escape para cancelar selección
-                else if (e.key === 'Escape') {
+                } else if (e.key === 'Escape') {
                     clearSelection();
                 }
             });
 
-            // Manejo especial para inputs
             document.addEventListener('keydown', function(e) {
                 if (document.activeElement.tagName === 'INPUT') {
                     if (e.key === 'Enter') {
@@ -654,13 +595,10 @@
         // Navegación con flechas
         function navigateWithArrows(direction) {
             if (!activeCell) {
-                // Si no hay celda activa, activar la primera celda
                 setActiveCell(0, 0);
                 return;
             }
 
-            const [row, col] = [activeCell.row, activeCell.col];
-            
             switch (direction) {
                 case 'ArrowUp':
                     moveActiveCell('up');
@@ -677,7 +615,6 @@
             }
         }
 
-        // Mover celda activa
         function moveActiveCell(direction) {
             if (!activeCell) return;
 
@@ -702,20 +639,15 @@
             setActiveCell(newRow, newCol);
         }
 
-        // Establecer celda activa
         function setActiveCell(row, col) {
-            // Limpiar celda activa anterior
             document.querySelectorAll('.cell-active').forEach(cell => 
                 cell.classList.remove('cell-active'));
 
             activeCell = { row, col };
             
-            // Marcar nueva celda activa
             const cell = document.querySelector(`.sheet-table td[data-row="${row}"][data-col="${col}"]`);
             if (cell) {
                 cell.classList.add('cell-active');
-                
-                // Hacer scroll para asegurar que la celda sea visible
                 cell.scrollIntoView({ 
                     behavior: 'smooth', 
                     block: 'nearest', 
@@ -723,13 +655,11 @@
                 });
             }
 
-            // Actualizar selección
             selectedCells.clear();
             selectedCells.add(`${row},${col}`);
             highlightSelectedCells();
         }
 
-        // Iniciar edición de celda activa
         function startEditingActiveCell() {
             if (!activeCell) return;
 
@@ -740,7 +670,6 @@
             }
         }
 
-        // Limpiar selección
         function clearSelection() {
             selectedCells.clear();
             activeCell = null;
@@ -749,17 +678,36 @@
             });
         }
         
-        // Configurar eventos de selección de celdas mejorados
+        // CORRECCIÓN: Configurar eventos de selección
         function setupSelectionEvents() {
             const sheetContainer = document.getElementById('sheetContainer');
             
             sheetContainer.addEventListener('mousedown', function(e) {
-                if (e.target.classList.contains('column-resizer') || e.target.tagName === 'TH' || e.target.classList.contains('row-number-cell')) {
+                if (e.target.classList.contains('column-resizer')) {
                     return;
                 }
                 
+                // CORRECCIÓN: Manejar clicks en encabezados de columna
+                if (e.target.tagName === 'TH' && !e.target.classList.contains('corner-header-cell')) {
+                    const colIndex = parseInt(e.target.dataset.index);
+                    if (!isNaN(colIndex)) {
+                        selectColumn(colIndex);
+                        e.preventDefault();
+                        return;
+                    }
+                }
+                
+                // CORRECCIÓN: Manejar clicks en números de fila
+                if (e.target.classList.contains('row-number-cell') && e.target.dataset.index !== undefined) {
+                    const rowIndex = parseInt(e.target.dataset.index);
+                    if (!isNaN(rowIndex)) {
+                        selectRow(rowIndex);
+                        e.preventDefault();
+                        return;
+                    }
+                }
+                
                 if (e.target.tagName === 'INPUT') {
-                    // Si hacemos clic en un input, establecer como celda activa
                     const cell = e.target.closest('td');
                     if (cell) {
                         const row = parseInt(cell.dataset.row);
@@ -775,10 +723,8 @@
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
                 
-                // Establecer como celda activa
                 setActiveCell(row, col);
                 
-                // Iniciar selección múltiple
                 isSelecting = true;
                 selectionStartCell = { row, col };
                 selectionEndCell = { row, col };
@@ -811,7 +757,6 @@
                 selectionEndCell = null;
             });
 
-            // Doble clic para editar
             sheetContainer.addEventListener('dblclick', function(e) {
                 const cell = e.target.closest('td');
                 if (cell) {
@@ -824,7 +769,6 @@
             });
         }
         
-        // Actualizar el conjunto de celdas seleccionadas
         function updateSelection(ctrlKey, shiftKey) {
             if (!selectionStartCell || !selectionEndCell) return;
             
@@ -849,7 +793,6 @@
             highlightSelectedCells();
         }
         
-        // Resaltar las celdas seleccionadas
         function highlightSelectedCells() {
             document.querySelectorAll('.sheet-table td.cell-selected').forEach(cell => 
                 cell.classList.remove('cell-selected'));
@@ -863,7 +806,6 @@
             });
         }
         
-        // Función para procesar los datos GeoJSON
         function processGeoData() {
             saveToHistory();
             
@@ -885,7 +827,6 @@
             updateWrapButton();
         }
 
-        // Función para convertir índice numérico a nombre de columna estilo Excel
         function getExcelColumnName(index) {
             let columnName = '';
             
@@ -897,7 +838,6 @@
             return columnName;
         }
 
-        // Función para reconstruir la tabla completa
         function rebuildSheet() {
             const table = document.getElementById('sheetTable');
             const headerRow = document.getElementById('columnHeadersRow');
@@ -923,10 +863,6 @@
                 th.style.width = colWidth + 'px';
                 th.style.minWidth = colWidth + 'px';
                 th.style.maxWidth = colWidth + 'px';
-                
-                th.addEventListener('click', function() {
-                    selectColumn(colIndex);
-                });
                 
                 const resizer = document.createElement('div');
                 resizer.className = 'column-resizer';
@@ -1031,9 +967,6 @@
                 rowNumTd.className = 'row-number-cell';
                 rowNumTd.textContent = rowIndex + 2;
                 rowNumTd.dataset.index = rowIndex;
-                rowNumTd.addEventListener('click', function() {
-                    selectRow(rowIndex);
-                });
                 tr.appendChild(rowNumTd);
                 
                 currentColumns.forEach((col, colIndex) => {
@@ -1082,7 +1015,10 @@
                             }
                         });
                     } else {
-                        const value = feature.properties?.[col] || '';
+                        // CORRECCIÓN: Verificar si la propiedad existe
+                        const value = feature.properties && feature.properties.hasOwnProperty(col) 
+                            ? feature.properties[col] 
+                            : '';
                         input.value = value;
                         
                         if (String(value).length > 15) {
@@ -1115,9 +1051,7 @@
             highlightSelectedCells();
         }
         
-        // Función para seleccionar una fila
         function selectRow(rowIndex) {
-            saveToHistory();
             selectedCells.clear();
             
             for (let colIndex = 0; colIndex < currentColumns.length; colIndex++) {
@@ -1129,9 +1063,7 @@
             updateStatus(`Fila ${rowIndex + 2} seleccionada`);
         }
         
-        // Función para seleccionar una columna
         function selectColumn(colIndex) {
-            saveToHistory();
             selectedCells.clear();
             
             for (let rowIndex = -1; rowIndex < geoData.features.length; rowIndex++) {
@@ -1146,7 +1078,6 @@
             updateStatus(`Columna ${excelColName} (${propertyName}) seleccionada`);
         }
         
-        // Funciones de redimensionamiento de columnas (sin cambios)
         function startColumnResize(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1187,7 +1118,7 @@
             updateStatus(`Columna ${excelColName} (${propertyName}) redimensionada a ${newWidth}px`);
         }
         
-        // Función para agregar una nueva columna
+        // CORRECCIÓN: Función para agregar nueva columna
         function addColumn() {
             saveToHistory();
             
@@ -1204,9 +1135,11 @@
             const excelColName = getExcelColumnName(newColIndex);
             columnNameMap[excelColName] = newColName;
             
-            // CORRECCIÓN: Agregar la propiedad a todas las features existentes
+            // CORRECCIÓN CRÍTICA: Asegurar que TODAS las features tengan la nueva propiedad
             geoData.features.forEach(feature => {
-                if (!feature.properties) feature.properties = {};
+                if (!feature.properties) {
+                    feature.properties = {};
+                }
                 feature.properties[newColName] = "";
             });
             
@@ -1214,7 +1147,6 @@
             updateStatus(`Nueva columna "${newColName}" (${excelColName}) agregada`);
         }
         
-        // Función para agregar una nueva fila
         function addRow() {
             saveToHistory();
             
@@ -1227,7 +1159,6 @@
                 properties: {}
             };
             
-            // Agregar todas las propiedades existentes con valores vacíos
             currentColumns.forEach(col => {
                 if (col !== 'geometry') {
                     newFeature.properties[col] = "";
@@ -1239,7 +1170,6 @@
             updateStatus(`Nueva fila agregada`);
         }
         
-        // Función para eliminar la selección actual
         function deleteSelected() {
             if (selectedCells.size === 0) {
                 updateStatus("No hay nada seleccionado para eliminar", true);
@@ -1324,7 +1254,6 @@
             rebuildSheet();
         }
         
-        // Función para copiar la selección actual
         function copySelection() {
             if (selectedCells.size === 0) {
                 updateStatus("No hay nada seleccionado para copiar", true);
@@ -1365,7 +1294,6 @@
             updateStatus(`Selección copiada (${clipboardData.data.length}x${clipboardData.data[0].length})`);
         }
         
-        // Función para pegar la selección copiada
         function pasteSelection() {
             if (!clipboardData || clipboardData.type !== 'cells') {
                 updateStatus("No hay datos de celdas para pegar", true);
@@ -1392,7 +1320,7 @@
                             const colName = currentColumns[targetCol];
                             
                             if (targetRow === -1) {
-                                // No permitir pegar en la fila de nombres por ahora
+                                // No permitir pegar en la fila de nombres
                             } else {
                                 if (colName === 'geometry') {
                                     try {
@@ -1418,7 +1346,6 @@
             updateStatus(`Datos pegados`);
         }
         
-        // Función para alternar el modo wrap
         function toggleWrapMode() {
             isWrapMode = !isWrapMode;
             updateWrapButton();
@@ -1435,7 +1362,6 @@
             updateStatus(`Modo wrap ${isWrapMode ? 'activado' : 'desactivado'}`);
         }
         
-        // Función para actualizar el botón de wrap
         function updateWrapButton() {
             const wrapButton = document.getElementById('wrapButton');
             if (isWrapMode) {
@@ -1445,7 +1371,6 @@
             }
         }
         
-        // Función para guardar el estado actual en el historial de deshacer
         function saveToHistory() {
             undoStack.push({
                 geoData: JSON.parse(JSON.stringify(geoData)),
@@ -1463,7 +1388,6 @@
             updateUndoRedoButtons();
         }
         
-        // Función para deshacer la última acción
         function undoAction() {
             if (undoStack.length === 0) {
                 updateStatus("No hay acciones para deshacer", true);
@@ -1491,7 +1415,6 @@
             updateStatus("Acción deshecha");
         }
         
-        // Función para rehacer la última acción deshecha
         function redoAction() {
             if (redoStack.length === 0) {
                 updateStatus("No hay acciones para rehacer", true);
@@ -1519,7 +1442,6 @@
             updateStatus("Acción rehecha");
         }
         
-        // Función para actualizar los botones de deshacer/rehacer
         function updateUndoRedoButtons() {
             const undoButton = document.getElementById('undoButton');
             const redoButton = document.getElementById('redoButton');
@@ -1543,11 +1465,7 @@
             }
         }
 
-        // NUEVAS FUNCIONES: Separar Save y Download
-        
-        // Función para guardar los datos (actualizar los datos en memoria)
         function saveData() {
-            // Asegurarse de que todos los valores actuales estén guardados
             const inputs = document.querySelectorAll('.sheet-table input');
             inputs.forEach(input => {
                 const row = parseInt(input.dataset.row);
@@ -1555,7 +1473,6 @@
                 const colName = currentColumns[col];
                 
                 if (row === -1) {
-                    // Actualizar nombre de columna si es necesario
                     if (colName !== input.value.trim() && input.value.trim() !== '') {
                         currentColumns[col] = input.value.trim();
                         const excelColName = getExcelColumnName(col);
@@ -1584,20 +1501,15 @@
             updateStatus("Datos guardados en memoria");
         }
         
-        // Función para descargar el archivo
         function downloadFile() {
-            // Primero guardar los datos actuales
             saveData();
             
-            // Crear una copia profunda de los datos para exportar
             const dataToExport = JSON.parse(JSON.stringify(geoData));
             
-            // Limpiar y reorganizar las propiedades según el orden actual de las columnas
             dataToExport.features.forEach(feature => {
                 const newProperties = {};
                 currentColumns.forEach(colName => {
                     if (colName !== 'geometry') {
-                        // Asegurarse de que la propiedad existe, aunque sea vacía
                         newProperties[colName] = feature.properties && feature.properties[colName] !== undefined 
                             ? feature.properties[colName] 
                             : "";
@@ -1606,7 +1518,6 @@
                 feature.properties = newProperties;
             });
             
-            // Crear el blob y descargar
             const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {type: 'application/json'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
@@ -1619,7 +1530,6 @@
             updateStatus("Archivo descargado como geojson_export.geojson");
         }
         
-        // Función para actualizar el estado
         function updateStatus(message, isError = false) {
             const statusBar = document.getElementById('statusBar');
             statusBar.textContent = message;
