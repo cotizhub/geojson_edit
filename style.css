@@ -83,7 +83,6 @@ body {
     overflow: auto; /* Mostrar barras de desplazamiento */
     background: white;
     position: relative;
-    border: 1px solid #d4d4d4;
 }
 
 /* Estructura de tabla para la hoja */
@@ -95,7 +94,7 @@ body {
 }
 
 .sheet-table th, .sheet-table td {
-    border: 1px solid #e0e0e0;
+    border: 1px solid #d4d4d4;
     padding: 0;
     box-sizing: border-box;
     height: 22px;
@@ -111,6 +110,7 @@ body {
     top: 0;
     z-index: 10;
     background: #f8f9fa;
+    border-bottom: 2px solid #d4d4d4;
 }
 
 .sheet-table th {
@@ -121,7 +121,9 @@ body {
     user-select: none;
     white-space: nowrap;
     text-overflow: ellipsis;
-    padding: 0 5px;
+    padding: 2px 5px;
+    border-right: 1px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
 }
 
 .sheet-table th:hover {
@@ -155,6 +157,9 @@ body {
     color: #444;
     cursor: pointer;
     user-select: none;
+    border-right: 2px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
+    font-weight: normal;
 }
 
 .row-number-cell:hover {
@@ -174,6 +179,8 @@ body {
     background: #f8f9fa;
     width: 40px;
     min-width: 40px;
+    border-right: 2px solid #d4d4d4;
+    border-bottom: 2px solid #d4d4d4;
 }
 
 /* Celdas de datos */
@@ -181,6 +188,9 @@ body {
     height: auto; /* Altura automática para permitir ajuste de texto */
     min-height: 22px; /* Altura mínima */
     cursor: cell;
+    border-right: 1px solid #d4d4d4;
+    border-bottom: 1px solid #d4d4d4;
+    background: white;
 }
 
 .sheet-table tr.row-selected td {
@@ -188,7 +198,7 @@ body {
 }
 
 .sheet-table td.cell-selected {
-    background-color: #d3e3fd !important;
+    background-color: #e5f3ff !important;
     outline: 2px solid #0078d7;
 }
 
