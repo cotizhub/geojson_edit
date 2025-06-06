@@ -419,7 +419,16 @@
         // Variables globales
         let geoData = { 
             type: "FeatureCollection", 
-            features: []  // INICIAR VACÍO
+            features: [
+                {
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [0, 0]
+                    },
+                    properties: {}
+                }
+            ]
         };
         
         let currentColumns = ['geometry'];  // Solo columna geometry por defecto
@@ -865,11 +874,7 @@
                 input.value = col;
                 
                 // Event listener para renombrar propiedades
-                input.addEventListener('input', function(e) {
-                    // Permitir escritura inmediata
-                });
-                
-                input.addEventListener('blur', function(e) {
+                input.addEventListener('change', function(e) {
                     const oldName = currentColumns[colIndex];
                     const newName = e.target.value.trim();
                     
@@ -963,11 +968,7 @@
                         }
                         
                         // Event listener para coordenadas
-                        input.addEventListener('input', function(e) {
-                            // Permitir escritura inmediata
-                        });
-                        
-                        input.addEventListener('blur', function(e) {
+                        input.addEventListener('change', function(e) {
                             try {
                                 saveToHistory();
                                 
@@ -1001,11 +1002,7 @@
                         }
                         
                         // Event listener para propiedades
-                        input.addEventListener('input', function(e) {
-                            // Permitir escritura inmediata
-                        });
-                        
-                        input.addEventListener('blur', function(e) {
+                        input.addEventListener('change', function(e) {
                             saveToHistory();
                             
                             if (!feature.properties) feature.properties = {};
