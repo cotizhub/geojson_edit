@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeoJSON Editor</title>
+    <title>GeoJSON Editor Version 1.0 </title>
     <style>
         body {
             font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
@@ -785,16 +785,58 @@
                 cell.classList.remove('cell-selected'));
             document.querySelectorAll('.sheet-table tr.row-selected').forEach(row => 
                 row.classList.remove('row-selected'));
-            
+            document.querySelectorAll('.row-number-cell').forEach(cell => 
+                cell.classList.remove('row-selected'));
+            document.querySelectorAll('.sheet-table th').forEach(cell => 
+                cell.classList.remove('column-selected'));
+
+            // Agrupar por filas y columnas seleccionadas
+            const rowSelection = new Set();
+            const colSelection = new Set();
+
             selectedCells.forEach(cellKey => {
                 const [row, col] = cellKey.split(',').map(Number);
                 const cell = document.querySelector(`.sheet-table td[data-row="${row}"][data-col="${col}"]`);
                 if (cell) {
                     cell.classList.add('cell-selected');
                 }
+                if (row >= 0) rowSelection.add(row);
+                if (col >= 0) colSelection.add(col);
+            });
+
+            // Marcar filas completas si todas sus columnas están seleccionadas
+            rowSelection.forEach(row => {
+                let fullRowSelected = true;
+                for (let col = 0; col < currentColumns.length; col++) {
+                    if (!selectedCells.has(`${row},${col}`)) {
+                        fullRowSelected = false;
+                        break;
+                    }
+                }
+                if (fullRowSelected) {
+                    const rowEl = document.querySelector(`.row-number-cell[data-index="${row}"]`);
+                    if (rowEl) rowEl.classList.add('row-selected');
+                    const rowTr = document.querySelectorAll(`.sheet-table td[data-row="${row}"]`);
+                    rowTr.forEach(td => td.classList.add('cell-selected'));
+                }
+            });
+
+            // Marcar columnas completas si todas sus filas están seleccionadas
+            colSelection.forEach(col => {
+                let fullColSelected = true;
+                for (let row = -1; row < geoData.features.length; row++) {
+                    if (!selectedCells.has(`${row},${col}`)) {
+                        fullColSelected = false;
+                        break;
+                    }
+                }
+                if (fullColSelected) {
+                    const colEl = document.querySelector(`.sheet-table th[data-index="${col}"]`);
+                    if (colEl) colEl.classList.add('column-selected');
+                }
             });
         }
-        
+
         function processGeoData() {
             saveToHistory();
             
