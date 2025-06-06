@@ -643,6 +643,10 @@
             document.querySelectorAll('.cell-active, .cell-selected').forEach(cell => {
                 cell.classList.remove('cell-active', 'cell-selected');
             });
+            document.querySelectorAll('.row-number-cell').forEach(cell => 
+                cell.classList.remove('row-selected'));
+            document.querySelectorAll('.sheet-table th').forEach(cell => 
+                cell.classList.remove('column-selected'));
         }
         
         // Configurar eventos de selección
@@ -654,6 +658,7 @@
                     return;
                 }
                 
+                // Manejar clicks en encabezados de columna
                 if (e.target.tagName === 'TH' && !e.target.classList.contains('corner-header-cell')) {
                     const colIndex = parseInt(e.target.dataset.index);
                     if (!isNaN(colIndex)) {
@@ -663,6 +668,7 @@
                     }
                 }
                 
+                // Manejar clicks en números de fila
                 if (e.target.classList.contains('row-number-cell') && e.target.dataset.index !== undefined) {
                     const rowIndex = parseInt(e.target.dataset.index);
                     if (!isNaN(rowIndex)) {
@@ -672,21 +678,35 @@
                     }
                 }
                 
+                // Manejar clicks en inputs - permitir edición inmediata
                 if (e.target.tagName === 'INPUT') {
                     const cell = e.target.closest('td');
                     if (cell) {
                         const row = parseInt(cell.dataset.row);
                         const col = parseInt(cell.dataset.col);
                         setActiveCell(row, col);
+                        
+                        // Limpiar otras selecciones visuales
+                        document.querySelectorAll('.row-number-cell').forEach(cell => 
+                            cell.classList.remove('row-selected'));
+                        document.querySelectorAll('.sheet-table th').forEach(cell => 
+                            cell.classList.remove('column-selected'));
                     }
-                    return;
+                    return; // Permitir que el input reciba el foco normalmente
                 }
                 
+                // Manejar clicks en celdas para selección de rangos
                 const cell = e.target.closest('td');
                 if (!cell) return;
                 
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
+                
+                // Limpiar selecciones visuales de filas/columnas
+                document.querySelectorAll('.row-number-cell').forEach(cell => 
+                    cell.classList.remove('row-selected'));
+                document.querySelectorAll('.sheet-table th').forEach(cell => 
+                    cell.classList.remove('column-selected'));
                 
                 setActiveCell(row, col);
                 
@@ -722,6 +742,7 @@
                 selectionEndCell = null;
             });
 
+            // Doble click para editar directamente
             sheetContainer.addEventListener('dblclick', function(e) {
                 const cell = e.target.closest('td');
                 if (cell) {
@@ -759,8 +780,11 @@
         }
         
         function highlightSelectedCells() {
+            // Limpiar selecciones previas
             document.querySelectorAll('.sheet-table td.cell-selected').forEach(cell => 
                 cell.classList.remove('cell-selected'));
+            document.querySelectorAll('.sheet-table tr.row-selected').forEach(row => 
+                row.classList.remove('row-selected'));
             
             selectedCells.forEach(cellKey => {
                 const [row, col] = cellKey.split(',').map(Number);
@@ -1029,8 +1053,18 @@
         function selectRow(rowIndex) {
             selectedCells.clear();
             
+            // Seleccionar todas las columnas de esta fila
             for (let colIndex = 0; colIndex < currentColumns.length; colIndex++) {
                 selectedCells.add(`${rowIndex},${colIndex}`);
+            }
+            
+            // Marcar visualmente la fila como seleccionada
+            document.querySelectorAll('.row-number-cell').forEach(cell => 
+                cell.classList.remove('row-selected'));
+            
+            const rowCell = document.querySelector(`.row-number-cell[data-index="${rowIndex}"]`);
+            if (rowCell) {
+                rowCell.classList.add('row-selected');
             }
             
             setActiveCell(rowIndex, 0);
@@ -1041,8 +1075,18 @@
         function selectColumn(colIndex) {
             selectedCells.clear();
             
+            // Seleccionar todas las filas de esta columna (incluyendo la fila de nombres)
             for (let rowIndex = -1; rowIndex < geoData.features.length; rowIndex++) {
                 selectedCells.add(`${rowIndex},${colIndex}`);
+            }
+            
+            // Marcar visualmente la columna como seleccionada
+            document.querySelectorAll('.sheet-table th').forEach(cell => 
+                cell.classList.remove('column-selected'));
+            
+            const colHeader = document.querySelector(`th[data-index="${colIndex}"]`);
+            if (colHeader) {
+                colHeader.classList.add('column-selected');
             }
             
             setActiveCell(0, colIndex);
