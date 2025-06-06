@@ -875,6 +875,8 @@
                 
                 // Event listener para renombrar propiedades
                 input.addEventListener('change', function(e) {
+                    saveToHistory();
+                    
                     const oldName = currentColumns[colIndex];
                     const newName = e.target.value.trim();
                     
@@ -896,27 +898,27 @@
                         return;
                     }
                     
-                    if (newName !== oldName) {
-                        saveToHistory();
-                        
-                        // Actualizar el nombre de la columna
-                        currentColumns[colIndex] = newName;
-                        
-                        // Actualizar el mapeo
-                        const excelColName = getExcelColumnName(colIndex);
-                        columnNameMap[excelColName] = newName;
-                        
-                        // Actualizar todas las features existentes
-                        geoData.features.forEach(feature => {
-                            if (feature.properties && feature.properties.hasOwnProperty(oldName)) {
-                                feature.properties[newName] = feature.properties[oldName];
+                    currentColumns[colIndex] = newName;
+                    
+                    const excelColName = getExcelColumnName(colIndex);
+                    columnNameMap[excelColName] = newName;
+                    
+                    geoData.features.forEach(feature => {
+                        if (feature.properties && feature.properties[oldName] !== undefined) {
+                            feature.properties[newName] = feature.properties[oldName];
+                            if (oldName !== newName) {
                                 delete feature.properties[oldName];
                             }
-                        });
-                        
-                        updateStatus(`Propiedad renombrada de "${oldName}" a "${newName}"`);
-                        rebuildSheet(); // Reconstruir para actualizar todo
+                        }
+                    });
+                    
+                    if (newName.length > 15) {
+                        td.setAttribute('data-tooltip', newName);
+                    } else {
+                        td.removeAttribute('data-tooltip');
                     }
+                    
+                    updateStatus(`Propiedad renombrada de "${oldName}" a "${newName}"`);
                 });
                 
                 if (col.length > 15) {
@@ -972,7 +974,7 @@
                             try {
                                 saveToHistory();
                                 
-                                const coords = e.target.value.split(',').map(c => parseFloat(c.trim()));
+                                const coords = e.target.value.split(',').map(Number);
                                 if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
                                     if (!feature.geometry) feature.geometry = { type: "Point" };
                                     feature.geometry.coordinates = coords;
@@ -982,11 +984,7 @@
                                 }
                             } catch (error) {
                                 updateStatus(`Error: ${error.message}`, true);
-                                if (feature.geometry && feature.geometry.coordinates) {
-                                    e.target.value = feature.geometry.coordinates.join(', ');
-                                } else {
-                                    e.target.value = '0, 0';
-                                }
+                                e.target.value = feature.geometry?.coordinates?.join(', ') || '0, 0';
                             }
                         });
                     } else {
@@ -1124,6 +1122,7 @@
             
             // Autoseleccionar la nueva columna y enfocar en el nombre
             setTimeout(() => {
+                selectColumn(newColIndex);
                 const nameInput = document.querySelector(`.property-name-row td[data-col="${newColIndex}"] input`);
                 if (nameInput) {
                     nameInput.focus();
@@ -1160,10 +1159,6 @@
             // Enfocar en la primera celda de la nueva fila
             setTimeout(() => {
                 setActiveCell(newRowIndex, 0);
-                const firstCell = document.querySelector(`.sheet-table td[data-row="${newRowIndex}"][data-col="0"] input`);
-                if (firstCell) {
-                    firstCell.focus();
-                }
             }, 100);
         }
         
